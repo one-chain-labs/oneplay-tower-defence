@@ -487,7 +487,7 @@ function PlayPageContent() {
         state.enemies.forEach((enemy) => {
           const dist = Math.hypot(enemy.x - tower.x, enemy.y - tower.y);
           if (dist <= tower.range && dist < closestDist) {
-            closestEnemy = enemy;
+            closestEnemy = enemy as Enemy;
             closestDist = dist;
           }
         });
@@ -497,8 +497,8 @@ function PlayPageContent() {
             id: `bullet-${Date.now()}-${Math.random()}`,
             x: tower.x,
             y: tower.y,
-            targetX: closestEnemy.x,
-            targetY: closestEnemy.y,
+            targetX: (closestEnemy as Enemy).x,
+            targetY: (closestEnemy as Enemy).y,
             speed: 10,
             damage: tower.damage,
             color: '#2196F3',
