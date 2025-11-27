@@ -1,7 +1,7 @@
 // Tower Defense Game Constants
 
-export const PACKAGE_ID = '0x0285a254d2b0b380212d9c01f5131c654a7f36bf5bea46474bd1d9478ce8a786';
-export const GAME_STATE_ID = '0x2487c1bb7c60d319478c37c5865f1013400dae8d8a82b269635d0a029057ea6b';
+export const PACKAGE_ID = '0xb94bc0f0f0b5fa9d331d8102ebc3f40d5bb0a416087e4d87b38d7bda3f7207e8';
+export const GAME_STATE_ID = '0xcc262164570eb60efb37571f05a93ecf2128fa7c40927e056ca1025901ac2e24';
 
 export const MINT_COST = 0.001; // SUI to mint tower NFT
 export const GAME_COST = 0.0005; // SUI to play game

@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
 import { playAndSubmit } from '@/lib/contracts';
-import { GAME_COST } from '@/lib/constants';
+import { GAME_COST, PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
 
 interface Tower {
@@ -16,6 +16,7 @@ interface Tower {
   range: number;
   fireRate: number;
   lastFire: number;
+  rarity: number;
 }
 
 interface Enemy {
@@ -58,6 +59,90 @@ const GAME_PATH = [
   { x: 600, y: 200 },
   { x: 800, y: 200 },
 ];
+
+// Tower Card Icon Component
+function TowerCardIcon({ rarity }: { rarity: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Get colors based on rarity
+    const rarityColors = {
+      1: { light: '#9e9e9e', mid: '#757575', dark: '#424242', glow: '#bdbdbd' },
+      2: { light: '#42a5f5', mid: '#2196f3', dark: '#1565c0', glow: '#64b5f6' },
+      3: { light: '#ab47bc', mid: '#9c27b0', dark: '#6a1b9a', glow: '#ce93d8' },
+      4: { light: '#ffd54f', mid: '#ffc107', dark: '#f57c00', glow: '#ffe082' },
+    };
+    const colors = rarityColors[rarity as keyof typeof rarityColors] || rarityColors[2];
+
+    const centerX = 32;
+    const centerY = 32;
+    const scale = 0.8;
+
+    // Base platform (hexagon)
+    ctx.fillStyle = '#2a2a2a';
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i;
+      const x = centerX + Math.cos(angle) * 12 * scale;
+      const y = centerY + 8 * scale + Math.sin(angle) * 12 * scale;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Tower body
+    const bodyGradient = ctx.createLinearGradient(centerX - 10 * scale, 0, centerX + 10 * scale, 0);
+    bodyGradient.addColorStop(0, colors.dark);
+    bodyGradient.addColorStop(0.5, colors.mid);
+    bodyGradient.addColorStop(1, colors.dark);
+    ctx.fillStyle = bodyGradient;
+    ctx.fillRect(centerX - 10 * scale, centerY - 5 * scale, 20 * scale, 15 * scale);
+
+    // Body shine
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(centerX - 8 * scale, centerY - 3 * scale, 5 * scale, 11 * scale);
+
+    // Turret base
+    const turretGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 8 * scale);
+    turretGradient.addColorStop(0, colors.light);
+    turretGradient.addColorStop(1, colors.mid);
+    ctx.fillStyle = turretGradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 8 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cannon barrel
+    ctx.fillStyle = '#424242';
+    ctx.fillRect(centerX, centerY - 2 * scale, 14 * scale, 4 * scale);
+
+    // Turret top
+    ctx.fillStyle = colors.glow;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rarity stars
+    if (rarity >= 2) {
+      ctx.fillStyle = colors.glow;
+      ctx.font = 'bold 10px Arial';
+      ctx.textAlign = 'center';
+      const stars = '⭐'.repeat(rarity - 1);
+      ctx.fillText(stars, centerX, centerY - 14 * scale);
+    }
+  }, [rarity]);
+
+  return <canvas ref={canvasRef} width={64} height={64} className="w-full h-full" />;
+}
 
 const ENEMY_TYPES = {
   normal: { hp: 50, speed: 1.5, color: '#f44336' },
@@ -169,18 +254,33 @@ function generateRewardTower(wavesCleared: number) {
 function PlayPageContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session');
-  const towerNftId = searchParams.get('tower');
   
-  // Get tower NFT stats from URL
-  const nftDamage = Number(searchParams.get('damage')) || 30;
-  const nftRange = Number(searchParams.get('range')) || 120;
-  const nftFireRate = Number(searchParams.get('fireRate')) || 800;
-  const nftRarity = Number(searchParams.get('rarity')) || 2;
+  // Get multiple towers from URL
+  const towersParam = searchParams.get('towers');
+  const playerTowers: Array<{id: string, damage: number, range: number, fireRate: number, rarity: number}> = towersParam 
+    ? JSON.parse(decodeURIComponent(towersParam))
+    : [];
+  
+  // For backward compatibility
+  const singleTower = searchParams.get('tower');
+  if (singleTower && playerTowers.length === 0) {
+    playerTowers.push({
+      id: singleTower,
+      damage: Number(searchParams.get('damage')) || 30,
+      range: Number(searchParams.get('range')) || 120,
+      fireRate: Number(searchParams.get('fireRate')) || 800,
+      rarity: Number(searchParams.get('rarity')) || 2,
+    });
+  }
+  
+  // Use first tower's ID for blockchain submission (or single tower param)
+  const towerNftId = singleTower || (playerTowers.length > 0 ? playerTowers[0].id : null);
 
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const gameStateRef = useRef({
     towers: [] as Tower[],
     enemies: [] as Enemy[],
@@ -191,7 +291,32 @@ function PlayPageContent() {
     isWaveActive: false,
     gameOver: false,
     victory: false,
+    isPaused: false, // For wave transitions
   });
+
+  // Initialize and play background music
+  useEffect(() => {
+    const audio = new Audio('/1.mp3');
+    audio.loop = true;
+    audio.volume = 0.3; // 30% volume
+    audioRef.current = audio;
+
+    // Try to play (may be blocked by browser autoplay policy)
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.log('Autoplay prevented. Music will start on user interaction.');
+      });
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const [, forceUpdate] = useState(0);
   const [message, setMessage] = useState('Select a tower card and place it on the map!');
@@ -203,14 +328,49 @@ function PlayPageContent() {
     dropChance: number;
     tower?: { damage: number; range: number; fireRate: number; rarity: number; rarityName: string };
   } | null>(null);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [showWaveTransition, setShowWaveTransition] = useState(false);
+  const [transitionWave, setTransitionWave] = useState(1);
+  const [showSacrificeModal, setShowSacrificeModal] = useState(false);
+  const [sacrificeTowerId, setSacrificeTowerId] = useState<string | null>(null);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
-  const [availableCards, setAvailableCards] = useState([
-    { id: 1, used: false },
-    { id: 2, used: false },
-    { id: 3, used: false },
-    { id: 4, used: false },
-    { id: 5, used: false },
-  ]);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(true);
+
+  // Toggle music
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isMusicPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(err => console.log('Play failed:', err));
+      }
+      setIsMusicPlaying(!isMusicPlaying);
+    }
+  };
+  
+  // Fetch all player's towers for sacrifice selection
+  const { data: allTowers } = useSuiClientQuery(
+    'getOwnedObjects',
+    {
+      owner: account?.address || '',
+      filter: {
+        StructType: `${PACKAGE_ID}::game::TowerNFT`,
+      },
+      options: {
+        showContent: true,
+      },
+    },
+    {
+      enabled: !!account?.address && showSacrificeModal,
+    }
+  );
+  const [availableCards, setAvailableCards] = useState(() => 
+    playerTowers.map((tower, index) => ({
+      id: index,
+      used: false,
+      tower: tower
+    }))
+  );
 
   // Start wave
   const handleStartWave = () => {
@@ -219,7 +379,7 @@ function PlayPageContent() {
 
     state.isWaveActive = true;
     forceUpdate((n) => n + 1);
-    setMessage(`Wave ${state.wave} started!`);
+    setMessage(`⚔️ Wave ${state.wave} - Fight!`);
 
     const waveEnemies = getWaveEnemies(state.wave);
     let enemyId = 0;
@@ -256,13 +416,25 @@ function PlayPageContent() {
   };
 
   // Submit result to blockchain
-  const handleSubmitResult = (wavesCleared: number) => {
+  const handleSubmitResult = (wavesCleared: number, sacrificeTowerId?: string) => {
     console.log('=== handleSubmitResult called ===');
     console.log('wavesCleared:', wavesCleared);
-    console.log('towerNftId:', towerNftId);
+    console.log('state.wave:', state.wave);
+    console.log('state.victory:', state.victory);
+    console.log('state.gameOver:', state.gameOver);
+    console.log('sacrificeTowerId:', sacrificeTowerId);
     console.log('account:', account?.address);
     console.log('submitting:', submitting);
     console.log('submitted:', submitted);
+    
+    // Use sacrifice tower if provided, otherwise use the tower from game
+    const towerToSubmit = sacrificeTowerId || towerNftId;
+    
+    if (wavesCleared < 5) {
+      console.log('🔥 Tower will be BURNED:', towerToSubmit);
+    } else {
+      console.log('✅ Tower will be RETURNED:', towerToSubmit);
+    }
 
     if (!account) {
       console.log('No account connected');
@@ -278,9 +450,10 @@ function PlayPageContent() {
 
     const dropChance = getNFTDropChance(wavesCleared);
 
-    // If no towerNftId, save locally (test mode)
-    if (!towerNftId) {
+    // If no tower to submit, save locally (test mode)
+    if (!towerToSubmit) {
       console.log('Test mode - saving locally');
+      setSubmitted(true);
       const rewardText = dropChance > 0 
         ? `${dropChance}% chance for NFT Tower!` 
         : 'No reward (need 2+ waves)';
@@ -303,7 +476,7 @@ function PlayPageContent() {
     setMessage(`💫 Submitting ${wavesCleared} waves to blockchain...`);
     
     const tx = new Transaction();
-    playAndSubmit(tx, towerNftId, GAME_COST * 1_000_000_000, wavesCleared);
+    playAndSubmit(tx, towerToSubmit, GAME_COST * 1_000_000_000, wavesCleared);
 
     signAndExecute(
       { transaction: tx as any },
@@ -312,6 +485,11 @@ function PlayPageContent() {
           console.log('✅ Result submitted successfully:', result);
           setSubmitting(false);
           setSubmitted(true);
+          
+          // Auto-redirect to home after 3 seconds
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 3000);
           
           // Show reward card animation
           if (dropChance > 0) {
@@ -380,7 +558,7 @@ function PlayPageContent() {
       const dy = y - yy;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      if (distance < 30) return true; // 30 = path width/2 + buffer
+      if (distance < 35) return true; // 35 pixels from path center (path width is 60)
     }
     return false;
   };
@@ -403,8 +581,11 @@ function PlayPageContent() {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    // Scale coordinates based on canvas size vs display size
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
     // Check if on path
     if (isOnPath(x, y)) {
@@ -421,15 +602,19 @@ function PlayPageContent() {
       return;
     }
 
-    // Use NFT tower stats
+    // Use selected card's tower stats
+    const selectedTowerData = availableCards.find(c => c.id === selectedCard)?.tower;
+    if (!selectedTowerData) return;
+
     const newTower: Tower = {
       id: `tower-${Date.now()}`,
       x,
       y,
-      damage: nftDamage,
-      range: nftRange,
-      fireRate: nftFireRate,
+      damage: selectedTowerData.damage,
+      range: selectedTowerData.range,
+      fireRate: selectedTowerData.fireRate,
       lastFire: 0,
+      rarity: selectedTowerData.rarity,
     };
 
     state.towers.push(newTower);
@@ -453,6 +638,13 @@ function PlayPageContent() {
 
     const gameLoop = () => {
       const now = Date.now();
+
+      // Skip game logic if paused (during wave transitions)
+      if (state.isPaused) {
+        forceUpdate((n) => n + 1);
+        animationId = requestAnimationFrame(gameLoop);
+        return;
+      }
 
       // Move enemies
       for (let i = state.enemies.length - 1; i >= 0; i--) {
@@ -499,7 +691,7 @@ function PlayPageContent() {
             y: tower.y,
             targetX: (closestEnemy as Enemy).x,
             targetY: (closestEnemy as Enemy).y,
-            speed: 10,
+            speed: 15, // Increased from 10 to 15 for better hit rate
             damage: tower.damage,
             color: '#2196F3',
           };
@@ -517,7 +709,7 @@ function PlayPageContent() {
 
         if (dist < bullet.speed) {
           const hitEnemy = state.enemies.find(
-            (e) => Math.hypot(e.x - bullet.targetX, e.y - bullet.targetY) < 20
+            (e) => Math.hypot(e.x - bullet.targetX, e.y - bullet.targetY) < 30
           );
 
           if (hitEnemy) {
@@ -558,21 +750,36 @@ function PlayPageContent() {
       if (state.lives <= 0 && !state.gameOver) {
         state.gameOver = true;
         state.isWaveActive = false;
-        const wavesCleared = state.wave > 1 ? state.wave - 1 : 0;
+        // Calculate waves cleared: if wave is active, current wave failed, so wave-1
+        // If wave not active, we're between waves, so also wave-1
+        const wavesCleared = Math.max(0, state.wave - 1);
         setMessage(`💀 Game Over! Cleared ${wavesCleared} waves`);
-        handleSubmitResult(wavesCleared);
+        setShowGameOverModal(true);
       }
 
       // Check wave complete
       if (state.isWaveActive && state.enemies.length === 0 && !state.gameOver) {
         state.isWaveActive = false;
         if (state.wave >= 5) {
+          // Wave 5 complete - Victory!
           state.victory = true;
           setMessage('🎉 Victory! You cleared all 5 waves!');
-          handleSubmitResult(5);
+          setShowGameOverModal(true);
         } else {
-          state.wave++;
-          setMessage(`Wave ${state.wave - 1} complete! Start wave ${state.wave}`);
+          // Wave 1-4 complete - Pause game and show transition
+          state.isPaused = true;
+          const nextWave = state.wave + 1;
+          setTransitionWave(nextWave);
+          setShowWaveTransition(true);
+          setMessage(`🎉 Wave ${state.wave} complete!`);
+          
+          // Auto-start next wave after 3 seconds
+          setTimeout(() => {
+            state.wave = nextWave;
+            state.isPaused = false;
+            setShowWaveTransition(false);
+            handleStartWave();
+          }, 3000);
         }
       }
 
@@ -622,76 +829,401 @@ function PlayPageContent() {
     // Draw towers
     state.towers.forEach((tower) => {
       // Range circle (faint)
-      ctx.fillStyle = 'rgba(33, 150, 243, 0.05)';
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.08)';
       ctx.beginPath();
       ctx.arc(tower.x, tower.y, tower.range, 0, Math.PI * 2);
       ctx.fill();
-
-      // Tower base
-      ctx.fillStyle = '#555';
-      ctx.fillRect(tower.x - 20, tower.y + 10, 40, 8);
-      ctx.fillStyle = '#666';
-      ctx.fillRect(tower.x - 18, tower.y + 12, 36, 4);
-
-      // Tower body
-      ctx.fillStyle = '#2196F3';
-      ctx.fillRect(tower.x - 12, tower.y - 10, 24, 20);
       
-      // Tower top
-      ctx.fillStyle = '#333';
-      ctx.fillRect(tower.x - 14, tower.y - 12, 28, 4);
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-      // Cannon barrel
-      ctx.fillStyle = '#222';
-      ctx.fillRect(tower.x - 4, tower.y - 15, 8, 10);
+      // Find closest enemy for barrel rotation
+      let targetAngle = -Math.PI / 2; // Default pointing up
+      const closestEnemy = state.enemies.reduce((closest: Enemy | null, enemy) => {
+        const dist = Math.hypot(enemy.x - tower.x, enemy.y - tower.y);
+        if (dist <= tower.range) {
+          if (!closest) return enemy;
+          const closestDist = Math.hypot(closest.x - tower.x, closest.y - tower.y);
+          return dist < closestDist ? enemy : closest;
+        }
+        return closest;
+      }, null);
 
-      // Damage indicator
-      ctx.fillStyle = '#FFD700';
+      if (closestEnemy) {
+        targetAngle = Math.atan2(closestEnemy.y - tower.y, closestEnemy.x - tower.x);
+      }
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(tower.x, tower.y + 18, 22, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Get colors based on rarity
+      const rarityColors = {
+        1: { light: '#9e9e9e', mid: '#757575', dark: '#424242', glow: '#bdbdbd' }, // Common - Gray
+        2: { light: '#42a5f5', mid: '#2196f3', dark: '#1565c0', glow: '#64b5f6' }, // Rare - Blue
+        3: { light: '#ab47bc', mid: '#9c27b0', dark: '#6a1b9a', glow: '#ce93d8' }, // Epic - Purple
+        4: { light: '#ffd54f', mid: '#ffc107', dark: '#f57c00', glow: '#ffe082' }, // Legendary - Gold
+      };
+      const colors = rarityColors[tower.rarity as keyof typeof rarityColors] || rarityColors[2];
+
+      // Base platform (hexagon)
+      ctx.fillStyle = '#2a2a2a';
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        const x = tower.x + Math.cos(angle) * 18;
+        const y = tower.y + 12 + Math.sin(angle) * 18;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Base highlight with rarity color
+      ctx.fillStyle = colors.dark + '40';
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        const x = tower.x + Math.cos(angle) * 14;
+        const y = tower.y + 12 + Math.sin(angle) * 14;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Tower body (cylinder) with rarity color
+      const bodyGradient = ctx.createLinearGradient(tower.x - 15, 0, tower.x + 15, 0);
+      bodyGradient.addColorStop(0, colors.dark);
+      bodyGradient.addColorStop(0.5, colors.mid);
+      bodyGradient.addColorStop(1, colors.dark);
+      ctx.fillStyle = bodyGradient;
+      ctx.fillRect(tower.x - 15, tower.y - 8, 30, 20);
+
+      // Body shine
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fillRect(tower.x - 12, tower.y - 6, 8, 16);
+
+      // Body border with glow for higher rarity
+      if (tower.rarity >= 3) {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = colors.glow;
+      }
+      ctx.strokeStyle = colors.dark;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(tower.x - 15, tower.y - 8, 30, 20);
+      ctx.shadowBlur = 0;
+
+      // Turret base (circle) with rarity color
+      const turretGradient = ctx.createRadialGradient(tower.x, tower.y - 2, 0, tower.x, tower.y - 2, 12);
+      turretGradient.addColorStop(0, colors.light);
+      turretGradient.addColorStop(1, colors.mid);
+      ctx.fillStyle = turretGradient;
+      ctx.beginPath();
+      ctx.arc(tower.x, tower.y - 2, 12, 0, Math.PI * 2);
+      ctx.fill();
+      
+      if (tower.rarity >= 3) {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = colors.glow;
+      }
+      ctx.strokeStyle = colors.dark;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Cannon barrel (rotates)
+      ctx.save();
+      ctx.translate(tower.x, tower.y - 2);
+      ctx.rotate(targetAngle);
+
+      // Barrel shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(0, -3, 20, 6);
+
+      // Barrel
+      const barrelGradient = ctx.createLinearGradient(0, -4, 0, 4);
+      barrelGradient.addColorStop(0, '#424242');
+      barrelGradient.addColorStop(0.5, '#616161');
+      barrelGradient.addColorStop(1, '#424242');
+      ctx.fillStyle = barrelGradient;
+      ctx.fillRect(0, -4, 22, 8);
+
+      // Barrel tip
+      ctx.fillStyle = '#212121';
+      ctx.fillRect(20, -3, 3, 6);
+
+      // Barrel highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(2, -3, 18, 2);
+
+      ctx.restore();
+
+      // Turret top detail (small circle) with rarity color
+      ctx.fillStyle = colors.glow;
+      ctx.beginPath();
+      ctx.arc(tower.x, tower.y - 2, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = colors.mid;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Rarity stars above tower
+      if (tower.rarity >= 2) {
+        ctx.fillStyle = colors.glow;
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        const stars = '⭐'.repeat(tower.rarity - 1);
+        ctx.fillText(stars, tower.x, tower.y - 20);
+      }
+
+      // Damage indicator with background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(tower.x - 18, tower.y + 16, 36, 14);
+      
+      // Border with rarity color
+      ctx.strokeStyle = colors.mid;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(tower.x - 18, tower.y + 16, 36, 14);
+      
+      ctx.fillStyle = colors.glow;
       ctx.font = 'bold 10px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(tower.damage.toString(), tower.x, tower.y + 25);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`⚔️${tower.damage}`, tower.x, tower.y + 23);
     });
 
-    // Draw bullets
+    // Draw bullets with enhanced effects
     state.bullets.forEach((bullet) => {
-      const gradient = ctx.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, 8);
+      // Outer glow
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = bullet.color;
+      
+      // Bullet trail
+      const gradient = ctx.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, 12);
       gradient.addColorStop(0, bullet.color);
+      gradient.addColorStop(0.5, bullet.color + '80');
       gradient.addColorStop(1, 'transparent');
       ctx.fillStyle = gradient;
       ctx.beginPath();
-      ctx.arc(bullet.x, bullet.y, 8, 0, Math.PI * 2);
+      ctx.arc(bullet.x, bullet.y, 12, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Bright core
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.shadowBlur = 0;
     });
 
-    // Draw hit effects
+    // Draw hit effects with multiple layers
     state.hitEffects.forEach((effect) => {
       const progress = effect.frame / effect.maxFrames;
-      const size = 5 + progress * 15;
       const alpha = 1 - progress;
+      
+      // Outer explosion ring
+      const outerSize = 10 + progress * 25;
+      ctx.strokeStyle = `rgba(255, 100, 0, ${alpha * 0.8})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, outerSize, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Middle ring
+      const midSize = 5 + progress * 18;
       ctx.strokeStyle = `rgba(255, 200, 0, ${alpha})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(effect.x, effect.y, size, 0, Math.PI * 2);
+      ctx.arc(effect.x, effect.y, midSize, 0, Math.PI * 2);
       ctx.stroke();
+      
+      // Inner flash
+      if (progress < 0.3) {
+        const flashAlpha = (1 - progress / 0.3);
+        ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Spark particles
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI * 2 / 6) * i + (progress * Math.PI);
+        const sparkDist = progress * 20;
+        const sparkX = effect.x + Math.cos(angle) * sparkDist;
+        const sparkY = effect.y + Math.sin(angle) * sparkDist;
+        
+        ctx.fillStyle = `rgba(255, 150, 0, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
     });
 
-    // Draw enemies
+    // Draw enemies as monsters
     state.enemies.forEach((enemy) => {
-      const size = enemy.type === 'tank' ? 14 : enemy.type === 'fast' ? 8 : 10;
+      const size = enemy.type === 'tank' ? 18 : enemy.type === 'fast' ? 10 : 14;
       const color = ENEMY_TYPES[enemy.type].color;
 
-      ctx.fillStyle = color;
+      ctx.save();
+      ctx.translate(enemy.x, enemy.y);
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, size, 0, Math.PI * 2);
+      ctx.ellipse(0, size * 0.8, size * 0.8, size * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
 
+      if (enemy.type === 'tank') {
+        // Tank Monster - Big and armored
+        // Body
+        const bodyGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+        bodyGradient.addColorStop(0, color);
+        bodyGradient.addColorStop(1, '#6a1b9a');
+        ctx.fillStyle = bodyGradient;
+        ctx.fillRect(-size * 0.9, -size * 0.6, size * 1.8, size * 1.4);
+        
+        // Armor plates
+        ctx.fillStyle = '#4a148c';
+        ctx.fillRect(-size * 0.7, -size * 0.4, size * 0.5, size * 0.3);
+        ctx.fillRect(size * 0.2, -size * 0.4, size * 0.5, size * 0.3);
+        ctx.fillRect(-size * 0.7, size * 0.1, size * 0.5, size * 0.3);
+        ctx.fillRect(size * 0.2, size * 0.1, size * 0.5, size * 0.3);
+        
+        // Head
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, -size * 0.3, size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Horns
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.5, -size * 0.6);
+        ctx.lineTo(-size * 0.7, -size);
+        ctx.lineTo(-size * 0.3, -size * 0.5);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(size * 0.5, -size * 0.6);
+        ctx.lineTo(size * 0.7, -size);
+        ctx.lineTo(size * 0.3, -size * 0.5);
+        ctx.fill();
+        
+        // Eyes
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(-size * 0.3, -size * 0.4, size * 0.15, size * 0.15);
+        ctx.fillRect(size * 0.15, -size * 0.4, size * 0.15, size * 0.15);
+        
+      } else if (enemy.type === 'fast') {
+        // Fast Monster - Slim and agile
+        // Body
+        const bodyGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+        bodyGradient.addColorStop(0, color);
+        bodyGradient.addColorStop(1, '#e65100');
+        ctx.fillStyle = bodyGradient;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.6, size * 0.9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Head
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, -size * 0.5, size * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Ears/Spikes
+        ctx.fillStyle = '#ff5722';
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.4, -size * 0.7);
+        ctx.lineTo(-size * 0.6, -size * 1.1);
+        ctx.lineTo(-size * 0.2, -size * 0.6);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(size * 0.4, -size * 0.7);
+        ctx.lineTo(size * 0.6, -size * 1.1);
+        ctx.lineTo(size * 0.2, -size * 0.6);
+        ctx.fill();
+        
+        // Eyes
+        ctx.fillStyle = '#ffeb3b';
+        ctx.beginPath();
+        ctx.arc(-size * 0.2, -size * 0.5, size * 0.12, 0, Math.PI * 2);
+        ctx.arc(size * 0.2, -size * 0.5, size * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Tail
+        ctx.strokeStyle = color;
+        ctx.lineWidth = size * 0.15;
+        ctx.beginPath();
+        ctx.moveTo(0, size * 0.5);
+        ctx.quadraticCurveTo(size * 0.8, size * 0.3, size * 1.2, size * 0.8);
+        ctx.stroke();
+        
+      } else {
+        // Normal Monster - Balanced
+        // Body
+        const bodyGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+        bodyGradient.addColorStop(0, color);
+        bodyGradient.addColorStop(1, '#c62828');
+        ctx.fillStyle = bodyGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Head
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, -size * 0.4, size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Eyes
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(-size * 0.25, -size * 0.45, size * 0.15, 0, Math.PI * 2);
+        ctx.arc(size * 0.25, -size * 0.45, size * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(-size * 0.25, -size * 0.45, size * 0.08, 0, Math.PI * 2);
+        ctx.arc(size * 0.25, -size * 0.45, size * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Mouth
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -size * 0.2, size * 0.3, 0, Math.PI);
+        ctx.stroke();
+        
+        // Arms
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(-size * 0.7, 0, size * 0.25, size * 0.5, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(size * 0.7, 0, size * 0.25, size * 0.5, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+
+      // HP Bar
       const hpPercent = enemy.hp / enemy.maxHp;
       const barWidth = size * 3;
       ctx.fillStyle = '#000';
-      ctx.fillRect(enemy.x - barWidth / 2 - 1, enemy.y - size - 8, barWidth + 2, 6);
+      ctx.fillRect(enemy.x - barWidth / 2 - 1, enemy.y - size - 12, barWidth + 2, 6);
       const hpColor = hpPercent > 0.5 ? '#4CAF50' : hpPercent > 0.25 ? '#FFC107' : '#f44336';
       ctx.fillStyle = hpColor;
-      ctx.fillRect(enemy.x - barWidth / 2, enemy.y - size - 7, barWidth * hpPercent, 4);
+      ctx.fillRect(enemy.x - barWidth / 2, enemy.y - size - 11, barWidth * hpPercent, 4);
     });
   });
 
@@ -700,7 +1232,17 @@ function PlayPageContent() {
   return (
     <div className="min-h-screen bg-gray-900 p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-4">🎮 Tower Defense</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-4xl font-bold text-white">🎮 Tower Defense</h1>
+          
+          {/* Music Control Button */}
+          <button
+            onClick={toggleMusic}
+            className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-bold transition-colors border-2 border-gray-600 hover:border-cyan-400"
+          >
+            {isMusicPlaying ? '🔊 Music On' : '🔇 Music Off'}
+          </button>
+        </div>
 
         {message && (
           <div className="bg-blue-500/20 border border-blue-500 rounded-xl p-4 mb-4">
@@ -720,42 +1262,48 @@ function PlayPageContent() {
           </div>
 
           <div className="space-y-4">
-            {/* Tower NFT Stats */}
-            <div className="bg-gradient-to-br from-purple-900 to-blue-900 rounded-xl p-4 border-2 border-purple-500">
-              <h3 className="text-white font-bold mb-2">🎯 Your Tower NFT</h3>
-              <div className="space-y-1">
-                <p className="text-white">⚔️ Damage: {nftDamage}</p>
-                <p className="text-white">🎯 Range: {nftRange}</p>
-                <p className="text-white">⚡ Fire Rate: {nftFireRate}ms</p>
-                <p className={`font-bold ${['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'][nftRarity]}`}>
-                  ⭐ {['', 'Common', 'Rare', 'Epic', 'Legendary'][nftRarity]}
-                </p>
+            {/* Selected Tower Info */}
+            {selectedCard !== null && (
+              <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-4 border-2 border-cyan-400 backdrop-blur-sm">
+                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 font-bold mb-2">🎯 Selected Tower</h3>
+                <div className="space-y-1">
+                  <p className="text-white">⚔️ Damage: {availableCards[selectedCard].tower.damage}</p>
+                  <p className="text-white">🎯 Range: {availableCards[selectedCard].tower.range}</p>
+                  <p className="text-white">⚡ Fire Rate: {availableCards[selectedCard].tower.fireRate}ms</p>
+                  <p className={`font-bold ${['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'][availableCards[selectedCard].tower.rarity]}`}>
+                    ⭐ {['', 'Common', 'Rare', 'Epic', 'Legendary'][availableCards[selectedCard].tower.rarity]}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Tower Cards */}
-            <div className="bg-gray-800 rounded-xl p-4">
-              <h3 className="text-white font-bold mb-2">🃏 Tower Cards (5)</h3>
+            <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 rounded-2xl p-4 border-2 border-purple-400 backdrop-blur-sm">
+              <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 font-bold mb-3">🃏 Your Towers ({availableCards.length})</h3>
               <div className="grid grid-cols-5 gap-2">
                 {availableCards.map((card) => (
                   <button
                     key={card.id}
                     onClick={() => !card.used && setSelectedCard(card.id)}
                     disabled={card.used || state.isWaveActive}
-                    className={`aspect-square rounded-lg border-2 flex items-center justify-center font-bold text-lg transition-all ${
+                    className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all relative overflow-hidden ${
                       card.used
-                        ? 'bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed'
+                        ? 'bg-gray-800 border-gray-600 cursor-not-allowed opacity-50'
                         : selectedCard === card.id
-                        ? 'bg-blue-500 border-blue-300 text-white shadow-lg shadow-blue-500/50'
-                        : 'bg-gray-700 border-gray-500 text-white hover:border-blue-400 cursor-pointer'
+                        ? 'bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border-cyan-400 shadow-lg shadow-cyan-500/50 scale-105'
+                        : 'bg-gradient-to-br from-gray-800 to-gray-900 border-purple-500/50 hover:border-cyan-400 hover:scale-105 cursor-pointer'
                     }`}
                   >
-                    {card.used ? '✓' : '🗼'}
+                    {card.used ? (
+                      <span className="text-2xl text-gray-500">✓</span>
+                    ) : (
+                      <TowerCardIcon rarity={card.tower.rarity} />
+                    )}
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-2">
-                {selectedCard ? 'Click on map to place tower' : 'Select a card to place tower'}
+              <p className="text-xs text-cyan-200 mt-2 text-center">
+                {selectedCard !== null ? `⚔️${availableCards[selectedCard].tower.damage} 🎯${availableCards[selectedCard].tower.range}` : '👆 Select a tower'}
               </p>
             </div>
 
@@ -768,14 +1316,20 @@ function PlayPageContent() {
               <p className="text-white">Enemies: {state.enemies.length}</p>
             </div>
 
-            {!state.isWaveActive && !state.gameOver && !state.victory && state.wave <= 5 && (
+            {!state.isWaveActive && !state.gameOver && !state.victory && state.wave === 1 && (
               <button
                 onClick={handleStartWave}
                 disabled={state.towers.length === 0}
-                className="w-full bg-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
-                {state.towers.length === 0 ? 'Place towers first!' : `Start Wave ${state.wave}`}
+                {state.towers.length === 0 ? '⚠️ Place towers first!' : '🚀 Start Game'}
               </button>
+            )}
+            
+            {state.isWaveActive && (
+              <div className="w-full bg-gradient-to-r from-red-500/20 to-orange-500/20 border-2 border-red-500 rounded-xl px-4 py-3">
+                <p className="text-red-400 font-bold text-center animate-pulse">⚔️ Wave {state.wave} in Progress...</p>
+              </div>
             )}
 
             {(state.gameOver || state.victory) && (
@@ -931,6 +1485,248 @@ function PlayPageContent() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Wave Transition Animation */}
+      {showWaveTransition && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
+          <div className="text-center">
+            <div className="mb-8 animate-bounce">
+              <div className="text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-pulse">
+                WAVE {transitionWave}
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-4">
+                <div className="h-1 w-32 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
+                <div className="text-2xl text-cyan-400 font-bold animate-pulse">INCOMING</div>
+                <div className="h-1 w-32 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
+              </div>
+              
+              <div className="text-white text-lg">
+                {transitionWave === 2 && '🏃 Fast enemies incoming!'}
+                {transitionWave === 3 && '⚡ Speed and power combined!'}
+                {transitionWave === 4 && '🛡️ Tank units detected!'}
+                {transitionWave === 5 && '💀 FINAL WAVE - All enemy types!'}
+              </div>
+              
+              <div className="mt-8">
+                <div className="inline-block px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-2 border-cyan-400 rounded-xl">
+                  <span className="text-cyan-300 font-bold">Prepare yourself...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Over Modal - Only shows on Victory or Game Over */}
+      {showGameOverModal && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className={`max-w-md w-full mx-4 rounded-3xl p-8 border-4 shadow-2xl ${
+            state.victory 
+              ? 'bg-gradient-to-br from-yellow-500 via-orange-500 to-pink-500 border-yellow-300'
+              : 'bg-gradient-to-br from-red-600 via-purple-600 to-gray-800 border-red-400'
+          }`}>
+            <div className="text-center">
+              <div className="text-8xl mb-4 animate-bounce">
+                {state.victory ? '🏆' : '💀'}
+              </div>
+              
+              <h2 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                {state.victory ? 'VICTORY!' : 'GAME OVER'}
+              </h2>
+              
+              <p className="text-2xl text-white mb-6 drop-shadow-lg">
+                {state.victory 
+                  ? 'You cleared all 5 waves!' 
+                  : `Cleared ${state.wave > 1 ? state.wave - 1 : 0} waves`
+                }
+              </p>
+
+              {(() => {
+                const wavesCleared = state.victory ? 5 : (state.wave > 1 ? state.wave - 1 : 0);
+                const dropChance = getNFTDropChance(wavesCleared);
+                const rewardInfo = getRewardInfo(wavesCleared);
+                
+                return dropChance > 0 ? (
+                  <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border-2 border-white/30">
+                    <p className="text-white font-bold mb-2">🎁 NFT Reward Chance:</p>
+                    <p className={`text-3xl font-bold ${rewardInfo.color}`}>
+                      {dropChance}%
+                    </p>
+                    <p className="text-white text-sm mt-1">
+                      {rewardInfo.rarity} Tower
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border-2 border-white/30">
+                    <p className="text-gray-300">Clear 2+ waves for NFT rewards</p>
+                  </div>
+                );
+              })()}
+
+              {!submitted ? (
+                state.victory ? (
+                  // Victory - Direct submit
+                  <button
+                    onClick={() => {
+                      handleSubmitResult(5);
+                    }}
+                    disabled={submitting}
+                    className="w-full bg-gradient-to-r from-cyan-400 to-blue-400 text-gray-900 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg disabled:opacity-50"
+                  >
+                    {submitting ? '⏳ Submitting...' : `📤 Submit Result (${GAME_COST} SUI)`}
+                  </button>
+                ) : (
+                  // Failed - Show sacrifice selection
+                  <button
+                    onClick={() => {
+                      setShowGameOverModal(false);
+                      setShowSacrificeModal(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-red-400 to-orange-400 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg"
+                  >
+                    ⚔️ Choose Tower to Sacrifice
+                  </button>
+                )
+              ) : (
+                <div className="space-y-3">
+                  <div className="bg-green-500/30 border-2 border-green-400 rounded-xl p-3">
+                    <p className="text-white font-bold text-center">✅ Result Submitted!</p>
+                    <p className="text-white text-sm text-center mt-2">Redirecting to home in 3 seconds...</p>
+                  </div>
+                  <button
+                    onClick={() => window.location.href = '/'}
+                    className="w-full bg-white text-gray-900 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg"
+                  >
+                    🏠 Back to Home Now
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sacrifice Tower Selection Modal */}
+      {showSacrificeModal && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="max-w-4xl w-full bg-gradient-to-br from-red-900/90 to-gray-900/90 rounded-3xl p-8 border-4 border-red-500 shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">⚔️</div>
+              <h2 className="text-4xl font-bold text-white mb-2">Choose Tower to Sacrifice</h2>
+              <p className="text-red-300 text-lg">
+                You failed to complete all 5 waves. Select a tower to burn.
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                Cleared {state.wave > 1 ? state.wave - 1 : 0} waves
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto mb-6">
+              {allTowers?.data?.map((obj: any) => {
+                const content = obj.data?.content;
+                if (content?.dataType !== 'moveObject' || !content.fields) return null;
+                
+                const tower = {
+                  id: obj.data.objectId,
+                  damage: Number(content.fields.damage),
+                  range: Number(content.fields.range),
+                  fireRate: Number(content.fields.fire_rate),
+                  rarity: Number(content.fields.rarity),
+                };
+                
+                const RARITY_COLORS: Record<number, string> = {
+                  1: 'text-gray-400',
+                  2: 'text-blue-400',
+                  3: 'text-purple-400',
+                  4: 'text-yellow-400',
+                };
+                
+                const RARITY_NAMES: Record<number, string> = {
+                  1: 'Common',
+                  2: 'Rare',
+                  3: 'Epic',
+                  4: 'Legendary',
+                };
+
+                return (
+                  <div
+                    key={tower.id}
+                    onClick={() => setSacrificeTowerId(tower.id)}
+                    className={`bg-gradient-to-br from-black/60 to-gray-900/60 rounded-xl p-4 cursor-pointer border-2 transition-all hover:scale-105 ${
+                      sacrificeTowerId === tower.id
+                        ? 'border-red-500 shadow-lg shadow-red-500/50'
+                        : 'border-gray-700 hover:border-red-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`font-bold text-sm ${RARITY_COLORS[tower.rarity]}`}>
+                        {RARITY_NAMES[tower.rarity]}
+                      </span>
+                      {sacrificeTowerId === tower.id && (
+                        <span className="text-red-500 text-xl">🔥</span>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">⚔️ DMG:</span>
+                        <span className="text-white font-bold">{tower.damage}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">🎯 RNG:</span>
+                        <span className="text-white font-bold">{tower.range}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">⚡ FR:</span>
+                        <span className="text-white font-bold">{tower.fireRate}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                      <span className="text-gray-500 text-xs">
+                        {tower.id.slice(0, 6)}...{tower.id.slice(-4)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setShowSacrificeModal(false);
+                  setShowGameOverModal(true);
+                  setSacrificeTowerId(null);
+                }}
+                className="flex-1 bg-gray-700 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition-colors"
+              >
+                ← Back
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (!sacrificeTowerId) {
+                    alert('Please select a tower to sacrifice');
+                    return;
+                  }
+                  const wavesCleared = state.wave > 1 ? state.wave - 1 : 0;
+                  setShowSacrificeModal(false);
+                  setShowGameOverModal(true);
+                  handleSubmitResult(wavesCleared, sacrificeTowerId);
+                }}
+                disabled={!sacrificeTowerId || submitting}
+                className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-red-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {submitting ? '⏳ Submitting...' : '🔥 Sacrifice & Submit'}
+              </button>
+            </div>
           </div>
         </div>
       )}

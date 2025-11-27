@@ -188,9 +188,11 @@ module tower_defense::game {
     }
 
     /// Play game and submit result (combined function)
+    /// If player fails (clears 0 waves), the tower is destroyed
+    /// If player succeeds (clears 1+ waves), the tower is returned
     public entry fun play_and_submit(
         game_state: &mut GameState,
-        tower: &TowerNFT,
+        tower: TowerNFT,
         payment: Coin<SUI>,
         waves_cleared: u8,
         ctx: &mut TxContext
@@ -204,6 +206,28 @@ module tower_defense::game {
         let payment_balance = coin::into_balance(payment);
         balance::join(&mut game_state.treasury, payment_balance);
 
+        let tower_id = object::id(&tower);
+
+        // Only return tower if player cleared all 5 waves (victory)
+        // If failed any wave, destroy the tower (but still give rewards based on waves cleared)
+        if (waves_cleared >= MAX_WAVES) {
+            // Victory! Cleared all 5 waves - return tower to owner
+            transfer::public_transfer(tower, ctx.sender());
+        } else {
+            // Failed to complete all waves - destroy tower
+            // Player still gets rewards based on waves_cleared
+            let TowerNFT { 
+                id, 
+                name: _, 
+                damage: _, 
+                range: _, 
+                fire_rate: _, 
+                rarity: _,
+                minted_at: _,
+            } = tower;
+            object::delete(id);
+        };
+
         // Try to mint reward tower based on waves cleared
         let reward_tower_id = try_mint_reward_tower(game_state, waves_cleared, ctx);
 
@@ -211,7 +235,7 @@ module tower_defense::game {
 
         event::emit(GameCompletedEvent {
             player: ctx.sender(),
-            tower_id: object::id(tower),
+            tower_id,
             waves_cleared,
             reward: if (reward_tower_id != 0) { 1 } else { 0 }, // 1 if got tower, 0 if not
             timestamp: ctx.epoch_timestamp_ms(),
