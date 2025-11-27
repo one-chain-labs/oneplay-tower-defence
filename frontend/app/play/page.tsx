@@ -1297,8 +1297,8 @@ function PlayPageContent() {
   const state = gameStateRef.current;
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
+      <div className="max-w-6xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-4xl font-bold text-white">🎮 Tower Defense</h1>
           

@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { useCurrentAccount } from '@mysten/dapp-kit';
+
 export default function HomePage() {
+  const account = useCurrentAccount();
   const [hoveredBuilding, setHoveredBuilding] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -22,8 +25,42 @@ export default function HomePage() {
         }}
       ></div>
 
+      {/* Wallet Connection Overlay */}
+      {!account && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-3xl p-12 border-4 border-yellow-400 shadow-2xl max-w-md mx-4 text-center">
+            <div className="mb-6">
+              <div className="mb-6 flex justify-center">
+                <img 
+                  src="/logo.png" 
+                  alt="Tower Defense GameFi" 
+                  className="h-24 w-auto drop-shadow-2xl animate-bounce"
+                />
+              </div>
+              <h2 className="text-4xl font-bold text-yellow-200 mb-4" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
+                Welcome!
+              </h2>
+              <p className="text-purple-200 text-lg mb-6">
+                Connect your wallet to enter the game world
+              </p>
+            </div>
+            
+            <div className="bg-black/30 rounded-xl p-6 mb-6 border-2 border-purple-500/50">
+              <p className="text-white mb-2">🎮 Play tower defense games</p>
+              <p className="text-white mb-2">🗼 Collect tower NFTs</p>
+              <p className="text-white mb-2">👹 Create monster challenges</p>
+              <p className="text-white">🏪 Trade on marketplace</p>
+            </div>
+
+            <div className="text-yellow-300 font-bold text-lg animate-pulse">
+              👆 Click "Connect Wallet" button above to start!
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tooltip following mouse */}
-      {hoveredBuilding && (
+      {hoveredBuilding && account && (
         <div 
           className="fixed z-50 pointer-events-none"
           style={{
@@ -39,7 +76,7 @@ export default function HomePage() {
 
       {/* Town Map - Desktop: absolute positioning, Mobile: grid layout */}
       <div 
-        className="relative w-full h-full px-4 sm:px-8 md:px-20 py-8 overflow-auto"
+        className={`relative w-full h-full px-4 sm:px-8 md:px-20 py-8 overflow-auto ${!account ? 'blur-sm pointer-events-none' : ''}`}
         onMouseMove={handleMouseMove}
       >
         {/* Mobile Grid Layout */}
@@ -91,7 +128,7 @@ export default function HomePage() {
         {/* Top Left - Lucky Draw */}
         <Link 
           href="/lucky-draw" 
-          className="absolute top-[18%] left-[20%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
+          className="absolute top-[8%] left-[8%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
           onMouseEnter={() => setHoveredBuilding('🎁 Lucky Draw')}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
@@ -105,7 +142,7 @@ export default function HomePage() {
         {/* Top Right - Challenge Hall */}
         <Link 
           href="/challenge-list" 
-          className="absolute top-[18%] right-[20%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
+          className="absolute top-[8%] right-[8%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
           onMouseEnter={() => setHoveredBuilding('⚔️ Challenge Hall')}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
@@ -119,7 +156,7 @@ export default function HomePage() {
         {/* Bottom Left - Tower Bag */}
         <Link 
           href="/my-towers" 
-          className="absolute bottom-[22%] left-[24%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
+          className="absolute bottom-[25%] left-[12%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
           onMouseEnter={() => setHoveredBuilding('🎒 My Towers')}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
@@ -133,7 +170,7 @@ export default function HomePage() {
         {/* Right Middle - Marketplace */}
         <Link 
           href="/market" 
-          className="absolute top-[42%] right-[20%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
+          className="absolute top-[48%] right-[8%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
           onMouseEnter={() => setHoveredBuilding('🏪 Marketplace')}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
@@ -147,7 +184,7 @@ export default function HomePage() {
         {/* Bottom Right - History Board (small notice board) */}
         <Link 
           href="/history" 
-          className="absolute bottom-[12%] right-[32%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
+          className="absolute bottom-[8%] right-[28%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
           onMouseEnter={() => setHoveredBuilding('📋 History Board')}
           onMouseLeave={() => setHoveredBuilding(null)}
         >

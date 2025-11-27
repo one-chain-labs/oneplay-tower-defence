@@ -202,12 +202,13 @@ export default function LuckyDrawPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="mb-6 flex items-center gap-4">
-          <Link href="/town" className="text-cyan-300 hover:text-cyan-200 font-bold">
-            ← Back to Town
-          </Link>
+        <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+          <div className="mb-6 flex items-center gap-4">
+            <Link href="/town" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg">
+              ← Back to Town
+            </Link>
           <Link href="/monster-draw" className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-2 rounded-xl font-bold hover:scale-105 transition-transform">
             👹 Monster Draw
           </Link>
@@ -300,6 +301,7 @@ export default function LuckyDrawPage() {
             </div>
           </>
         )}
+        </div>
       </div>
 
       {showMintCard && (

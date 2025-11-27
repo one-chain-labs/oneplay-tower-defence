@@ -743,8 +743,8 @@ function PlayChallengeContent() {
   const state = gameStateRef.current;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
+      <div className="max-w-7xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold text-white">⚔️ Challenge Mode</h1>
           <div className="flex gap-3">

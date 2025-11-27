@@ -9,6 +9,7 @@ import {
 import { getFullnodeUrl } from '@mysten/sui/client';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 import '@mysten/dapp-kit/dist/index.css';
 
 const networks = {
@@ -18,13 +19,14 @@ const networks = {
 
 function NavBar() {
   const pathname = usePathname();
+  const account = useCurrentAccount();
   const isMainPage = pathname === '/' || pathname === '/town';
 
   return (
     <>
-      {/* Logo - only on main page */}
-      {isMainPage && (
-        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50">
+      {/* Logo - only on main page when logged in */}
+      {isMainPage && account && (
+        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-[60]">
           <img 
             src="/logo.png" 
             alt="Tower Defense GameFi" 
@@ -40,7 +42,7 @@ function NavBar() {
       )}
       
       {/* Wallet button - always visible */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-[60]">
         <ConnectButton />
       </div>
     </>
@@ -60,7 +62,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networks} defaultNetwork="testnet">
-        <WalletProvider autoConnect>
+        <WalletProvider 
+          autoConnect
+          preferredWallets={['OneWallet']}
+        >
           <div className="min-h-screen">
             <NavBar />
             {children}

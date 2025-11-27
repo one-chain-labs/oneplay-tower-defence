@@ -288,8 +288,8 @@ export default function MyListingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
+      <div className="max-w-7xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold text-white">📋 My Listings</h1>
           <div className="flex gap-4">
@@ -301,9 +301,9 @@ export default function MyListingsPage() {
             </Link>
             <Link
               href="/"
-              className="bg-gray-700 text-white px-6 py-2 rounded-xl hover:bg-gray-600"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
             >
-              ← Back
+              ← Back to Town
             </Link>
           </div>
         </div>

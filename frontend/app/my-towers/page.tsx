@@ -120,13 +120,14 @@ export default function MyTowersPage() {
   }, [ownedMonsters]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <Link href="/town" className="text-cyan-300 hover:text-cyan-200 font-bold">
-            ← Back to Town
-          </Link>
-        </div>
+        <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+          <div className="mb-6">
+            <Link href="/town" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg">
+              ← Back to Town
+            </Link>
+          </div>
 
         <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl p-6 border-2 border-blue-400 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-6">
@@ -265,6 +266,7 @@ export default function MyTowersPage() {
               </>
             )
           )}
+        </div>
         </div>
       </div>
     </div>
