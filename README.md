@@ -604,23 +604,13 @@ Have an idea? We'd love to hear it!
 
 ---
 
-## 📞 Contact & Support
+## � Importan&t Links
 
 <table>
 <tr>
-<td width="50%">
+<td width="100%">
 
-### 💬 Get Help
-
-- 📧 **Email**: support@towerdefensegamefi.com
-- 💬 **Discord**: [Join our server](https://discord.gg/yourinvite)
-- 🐦 **Twitter**: [@TowerDefenseGF](https://twitter.com/yourhandle)
-- 📖 **Docs**: [Read the docs](https://docs.towerdefensegamefi.com)
-
-</td>
-<td width="50%">
-
-### 🔗 Links
+### � Linkse
 
 - 🌐 **Website**: [tower-crash-fnix.vercel.app](https://tower-crash-fnix.vercel.app)
 - � **Diemo Video**: [Watch on YouTube](https://www.youtube.com/watch?v=XD25M8ozAd8)
