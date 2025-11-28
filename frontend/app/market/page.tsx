@@ -72,11 +72,16 @@ export default function MarketplacePage() {
 
   // Calculate active listings
   useEffect(() => {
+    console.log('Listed events:', listedEvents);
+    console.log('Sold events:', soldEvents);
+    console.log('Cancelled events:', cancelledEvents);
+
     const listed = new Set<string>();
     const removed = new Set<string>();
 
     // Add all listed
     listedEvents?.data?.forEach((event: any) => {
+      console.log('Listed event:', event);
       const listingId = event.parsedJson?.listing_id;
       if (listingId) {
         listed.add(listingId);
@@ -101,6 +106,7 @@ export default function MarketplacePage() {
 
     // Active = listed - removed
     const active = new Set([...listed].filter(id => !removed.has(id)));
+    console.log('Active listing IDs:', active);
     setActiveListingIds(active);
   }, [listedEvents, soldEvents, cancelledEvents]);
 
@@ -115,7 +121,7 @@ export default function MarketplacePage() {
       try {
         const listingPromises = Array.from(activeListingIds).map(async (id) => {
           try {
-            const response = await fetch('https://fullnode.testnet.sui.io:443', {
+            const response = await fetch('https://rpc-testnet.onelabs.cc', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -166,6 +172,18 @@ export default function MarketplacePage() {
     fetchListings();
   }, [activeListingIds]);
 
+  // Get GAME token balance
+  const { data: gameCoins } = useSuiClientQuery(
+    'getCoins',
+    {
+      owner: account?.address || '',
+      coinType: `${PACKAGE_ID}::game::GAME`,
+    },
+    {
+      enabled: !!account?.address,
+    }
+  );
+
   // Buy tower
   const handleBuy = (listing: Listing) => {
     if (!account) {
@@ -173,10 +191,23 @@ export default function MarketplacePage() {
       return;
     }
 
+    // Get the first GAME coin object
+    const gameCoin = gameCoins?.data[0];
+    if (!gameCoin) {
+      setMessage('❌ No GAME tokens found!');
+      return;
+    }
+
+    const gameBalance = gameCoins?.data.reduce((sum, coin) => sum + Number(coin.balance), 0) || 0;
+    if (gameBalance < listing.price * 1_000_000_000) {
+      setMessage('❌ Not enough GAME tokens!');
+      return;
+    }
+
     setLoading(true);
     const tx = new Transaction();
     
-    const [coin] = tx.splitCoins(tx.gas, [listing.price * 1_000_000_000]);
+    const [coin] = tx.splitCoins(tx.object(gameCoin.coinObjectId), [listing.price * 1_000_000_000]);
     tx.moveCall({
       target: `${PACKAGE_ID}::game::buy_tower`,
       arguments: [
@@ -189,7 +220,7 @@ export default function MarketplacePage() {
       { transaction: tx as any },
       {
         onSuccess: () => {
-          setMessage(`🎉 Tower purchased for ${listing.price} SUI!`);
+          setMessage(`🎉 Tower purchased for ${listing.price} GAME!`);
           setLoading(false);
           // Remove from active listings
           setActiveListingIds(prev => {
@@ -284,7 +315,7 @@ export default function MarketplacePage() {
                     <div className="border-t border-gray-700 pt-4">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-gray-400 text-sm">Price:</span>
-                        <span className="text-yellow-400 text-2xl font-bold">{listing.price} SUI</span>
+                        <span className="text-yellow-400 text-2xl font-bold">{listing.price} GAME</span>
                       </div>
 
                       <div className="mb-3">

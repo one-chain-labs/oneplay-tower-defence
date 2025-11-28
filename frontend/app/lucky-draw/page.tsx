@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
-import { mintTower } from '@/lib/contracts';
+import { mintTower, claimFaucet } from '@/lib/contracts';
 import { MINT_COST, PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
 
@@ -104,19 +104,21 @@ export default function LuckyDrawPage() {
   const previousTowerCountRef = useRef(0);
   const [myTowers, setMyTowers] = useState<TowerNFT[]>([]);
 
-  const { data: balance } = useSuiClientQuery(
-    'getBalance',
+  // Get GAME token balance
+  const { data: gameCoins, refetch: refetchGameBalance } = useSuiClientQuery(
+    'getCoins',
     {
       owner: account?.address || '',
-      coinType: '0x2::sui::SUI',
+      coinType: `${PACKAGE_ID}::game::GAME`,
     },
     {
       enabled: !!account?.address,
-      refetchInterval: 3000,
+      refetchInterval: 1000, // Refresh every 1 second
     }
   );
 
-  const suiBalance = balance ? Number(balance.totalBalance) / 1_000_000_000 : 0;
+  const gameBalance = gameCoins?.data.reduce((sum, coin) => sum + Number(coin.balance), 0) || 0;
+  const gameBalanceFormatted = gameBalance / 1_000_000_000;
 
   const { data: ownedTowers, refetch: refetchTowers } = useSuiClientQuery(
     'getOwnedObjects',
@@ -167,9 +169,51 @@ export default function LuckyDrawPage() {
     }
   }, [ownedTowers, showMintCard]);
 
+  const handleClaimFaucet = () => {
+    if (!account) {
+      setMessage('Please connect wallet first');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('💰 Claiming GAME tokens...');
+    
+    const tx = new Transaction();
+    claimFaucet(tx);
+
+    signAndExecute(
+      { transaction: tx as any },
+      {
+        onSuccess: (result: any) => {
+          console.log('Faucet claimed successfully:', result);
+          setMessage('✅ Claimed 10 GAME tokens!');
+          setLoading(false);
+          refetchGameBalance();
+        },
+        onError: (error: any) => {
+          console.error('Error:', error);
+          setMessage(`Error: ${error.message}`);
+          setLoading(false);
+        },
+      }
+    );
+  };
+
   const handleMint = () => {
     if (!account) {
       setMessage('Please connect wallet first');
+      return;
+    }
+
+    if (gameBalance < MINT_COST) {
+      setMessage('❌ Not enough GAME tokens! Get GAME from OneChain faucet.');
+      return;
+    }
+
+    // Get the first GAME coin object
+    const gameCoin = gameCoins?.data[0];
+    if (!gameCoin) {
+      setMessage('❌ No GAME tokens found!');
       return;
     }
 
@@ -180,7 +224,7 @@ export default function LuckyDrawPage() {
     setMessage('🎰 Minting tower...');
     
     const tx = new Transaction();
-    mintTower(tx, MINT_COST * 1_000_000_000);
+    mintTower(tx, gameCoin.coinObjectId, MINT_COST);
 
     signAndExecute(
       { transaction: tx as any },
@@ -190,6 +234,7 @@ export default function LuckyDrawPage() {
           setLoading(false);
           setMessage('🎰 Opening mystery box...');
           refetchTowers();
+          refetchGameBalance();
         },
         onError: (error: any) => {
           console.error('Error:', error);
@@ -233,14 +278,21 @@ export default function LuckyDrawPage() {
             <div className="bg-gradient-to-b from-amber-600 to-amber-800 rounded-2xl p-4 mb-6 border-4 border-amber-950 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-200 text-sm font-bold">💰 Wallet Balance</p>
-                  <p className="text-yellow-50 text-2xl font-bold">{suiBalance.toFixed(4)} SUI</p>
+                  <p className="text-yellow-200 text-sm font-bold">💰 GAME Balance</p>
+                  <p className="text-yellow-50 text-2xl font-bold">{gameBalanceFormatted.toFixed(2)} GAME</p>
                 </div>
                 <div className="text-right">
                   <p className="text-yellow-200 text-sm font-bold">🗼 My Towers</p>
                   <p className="text-yellow-50 text-2xl font-bold">{myTowers.length}</p>
                 </div>
               </div>
+              <button
+                onClick={handleClaimFaucet}
+                disabled={loading}
+                className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-xl font-bold hover:scale-105 transition-transform disabled:opacity-50"
+              >
+                💰 Claim Free GAME Tokens (10 GAME)
+              </button>
             </div>
 
             {message && (
@@ -275,7 +327,7 @@ export default function LuckyDrawPage() {
                       Get a random tower with unique stats!
                     </p>
                     <p className="text-yellow-300 font-bold text-xl">
-                      Cost: {MINT_COST} SUI
+                      Cost: {MINT_COST / 1_000_000_000} GAME
                     </p>
                   </div>
 
@@ -284,7 +336,7 @@ export default function LuckyDrawPage() {
                     disabled={!account || loading}
                     className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 text-white px-8 py-6 rounded-xl font-bold text-2xl hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/50"
                   >
-                    {loading ? '✨ Minting...' : `🎁 Open Mystery Box (${MINT_COST} SUI)`}
+                    {loading ? '✨ Minting...' : `🎁 Open Mystery Box (${MINT_COST / 1_000_000_000} GAME)`}
                   </button>
                 </div>
               </div>
@@ -293,7 +345,8 @@ export default function LuckyDrawPage() {
             <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6 border-2 border-cyan-400">
               <h3 className="text-2xl font-bold text-cyan-300 mb-4">💡 How It Works</h3>
               <div className="space-y-3 text-cyan-100">
-                <p>• Pay {MINT_COST} SUI to open a mystery box</p>
+                <p>• Click "Claim Free GAME Tokens" to get 10 GAME</p>
+                <p>• Pay {MINT_COST / 1_000_000_000} GAME to open a mystery box</p>
                 <p>• Get a random tower NFT with unique stats</p>
                 <p>• Higher rarity = stronger tower</p>
                 <p>• Use towers in game or trade on market</p>

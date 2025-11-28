@@ -445,7 +445,7 @@ function PlayPageContent() {
   };
 
   // Submit result to blockchain
-  const handleSubmitResult = (wavesCleared: number, sacrificeTowerId?: string) => {
+  const handleSubmitResult = async (wavesCleared: number, sacrificeTowerId?: string) => {
     console.log('=== handleSubmitResult called ===');
     console.log('wavesCleared:', wavesCleared);
     console.log('state.wave:', state.wave);
@@ -504,13 +504,41 @@ function PlayPageContent() {
     setSubmitting(true);
     setMessage(`💫 Submitting ${wavesCleared} waves to blockchain...`);
     
-    const tx = new Transaction();
-    playAndSubmit(tx, towerToSubmit, GAME_COST * 1_000_000_000, wavesCleared);
+    // Get GAME token
+    try {
+      const gameCoinsResponse = await fetch('https://rpc-testnet.onelabs.cc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'suix_getCoins',
+          params: [account.address, `${PACKAGE_ID}::game::GAME`],
+        }),
+      });
+      const gameCoinsData = await gameCoinsResponse.json();
+      const gameCoin = gameCoinsData.result?.data[0];
+      
+      if (!gameCoin) {
+        setMessage('❌ No GAME tokens found!');
+        setSubmitting(false);
+        return;
+      }
+      
+      const tx = new Transaction();
+      tx.setGasBudget(100000000); // Set gas budget to 0.1 OCT
+      
+      const paymentAmount = GAME_COST; // GAME_COST is already in smallest units
+      console.log('Payment amount:', paymentAmount);
+      console.log('Tower to submit:', towerToSubmit);
+      console.log('Game coin:', gameCoin.coinObjectId);
+      
+      playAndSubmit(tx, towerToSubmit, gameCoin.coinObjectId, paymentAmount, wavesCleared);
 
-    signAndExecute(
-      { transaction: tx as any },
-      {
-        onSuccess: (result: any) => {
+      signAndExecute(
+        { transaction: tx as any },
+        {
+          onSuccess: (result: any) => {
           console.log('✅ Result submitted successfully:', result);
           setSubmitting(false);
           setSubmitted(true);
@@ -550,6 +578,11 @@ function PlayPageContent() {
         },
       }
     );
+    } catch (error: any) {
+      console.error('❌ Error in handleSubmitResult:', error);
+      setMessage(`❌ Error: ${error.message}`);
+      setSubmitting(false);
+    }
   };
 
   // Check if position is on path

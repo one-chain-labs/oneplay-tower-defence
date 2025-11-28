@@ -69,7 +69,7 @@ export default function ChallengeListPage() {
       try {
         const challengePromises = Array.from(activeChallengeIds).map(async (id) => {
           try {
-            const response = await fetch('https://fullnode.testnet.sui.io:443', {
+            const response = await fetch('https://rpc-testnet.onelabs.cc', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -221,11 +221,11 @@ export default function ChallengeListPage() {
                       <div className="space-y-2 mb-4">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-400">Entry Fee:</span>
-                          <span className="text-yellow-400 font-bold">{challenge.entryFee} SUI</span>
+                          <span className="text-yellow-400 font-bold">{challenge.entryFee} GAME</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-400">Reward:</span>
-                          <span className="text-green-400 font-bold">{rewardPerWinner.toFixed(3)} SUI</span>
+                          <span className="text-green-400 font-bold">{rewardPerWinner.toFixed(3)} GAME</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-400">ROI:</span>
@@ -254,7 +254,7 @@ export default function ChallengeListPage() {
                         disabled={isFull}
                         className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isFull ? 'Challenge Full' : `Play (${challenge.entryFee} SUI)`}
+                        {isFull ? 'Challenge Full' : `Play (${challenge.entryFee} GAME)`}
                       </button>
                     </div>
                   );

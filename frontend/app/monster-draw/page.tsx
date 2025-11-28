@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
+import { mintMonster } from '@/lib/contracts';
 import { MINT_COST, PACKAGE_ID, GAME_STATE_ID } from '@/lib/constants';
 import Link from 'next/link';
 
@@ -30,11 +31,12 @@ export default function MonsterDrawPage() {
   const previousMonsterCountRef = useRef(0);
   const [myMonsters, setMyMonsters] = useState<MonsterNFT[]>([]);
 
-  const { data: balance } = useSuiClientQuery(
-    'getBalance',
+  // Get GAME token balance
+  const { data: gameCoins, refetch: refetchGameBalance } = useSuiClientQuery(
+    'getCoins',
     {
       owner: account?.address || '',
-      coinType: '0x2::sui::SUI',
+      coinType: `${PACKAGE_ID}::game::GAME`,
     },
     {
       enabled: !!account?.address,
@@ -42,7 +44,8 @@ export default function MonsterDrawPage() {
     }
   );
 
-  const suiBalance = balance ? Number(balance.totalBalance) / 1_000_000_000 : 0;
+  const gameBalance = gameCoins?.data.reduce((sum, coin) => sum + Number(coin.balance), 0) || 0;
+  const gameBalanceFormatted = gameBalance / 1_000_000_000;
 
   const { data: ownedMonsters, refetch: refetchMonsters } = useSuiClientQuery(
     'getOwnedObjects',
@@ -99,6 +102,17 @@ export default function MonsterDrawPage() {
       return;
     }
 
+    if (gameBalance < MINT_COST) {
+      setMessage('❌ Not enough GAME tokens!');
+      return;
+    }
+
+    const gameCoin = gameCoins?.data[0];
+    if (!gameCoin) {
+      setMessage('❌ No GAME tokens found!');
+      return;
+    }
+
     previousMonsterCountRef.current = myMonsters.length;
     setLoading(true);
     setShowMintCard(true);
@@ -106,14 +120,7 @@ export default function MonsterDrawPage() {
     setMessage('🎰 Minting monster...');
     
     const tx = new Transaction();
-    const [coin] = tx.splitCoins(tx.gas, [MINT_COST * 1_000_000_000]);
-    tx.moveCall({
-      target: `${PACKAGE_ID}::game::mint_monster`,
-      arguments: [
-        tx.object(GAME_STATE_ID),
-        coin,
-      ],
-    });
+    mintMonster(tx, gameCoin.coinObjectId, MINT_COST);
 
     signAndExecute(
       { transaction: tx as any },
@@ -123,6 +130,7 @@ export default function MonsterDrawPage() {
           setLoading(false);
           setMessage('🎰 Opening mystery box...');
           refetchMonsters();
+          refetchGameBalance();
         },
         onError: (error: any) => {
           console.error('Error:', error);
@@ -166,8 +174,8 @@ export default function MonsterDrawPage() {
             <div className="bg-gradient-to-b from-amber-600 to-amber-800 rounded-2xl p-4 mb-6 border-4 border-amber-950 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-200 text-sm font-bold">💰 Wallet Balance</p>
-                  <p className="text-yellow-50 text-2xl font-bold">{suiBalance.toFixed(4)} SUI</p>
+                  <p className="text-yellow-200 text-sm font-bold">💰 GAME Balance</p>
+                  <p className="text-yellow-50 text-2xl font-bold">{gameBalanceFormatted.toFixed(2)} GAME</p>
                 </div>
                 <div className="text-right">
                   <p className="text-yellow-200 text-sm font-bold">👹 My Monsters</p>
@@ -208,7 +216,7 @@ export default function MonsterDrawPage() {
                       Get a random monster with unique abilities!
                     </p>
                     <p className="text-yellow-300 font-bold text-xl">
-                      Cost: {MINT_COST} SUI
+                      Cost: {MINT_COST / 1_000_000_000} GAME
                     </p>
                   </div>
 
@@ -217,7 +225,7 @@ export default function MonsterDrawPage() {
                     disabled={!account || loading}
                     className="w-full bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white px-8 py-6 rounded-xl font-bold text-2xl hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/50"
                   >
-                    {loading ? '✨ Minting...' : `🎃 Open Mystery Box (${MINT_COST} SUI)`}
+                    {loading ? '✨ Minting...' : `🎃 Open Mystery Box (${MINT_COST / 1_000_000_000} GAME)`}
                   </button>
                 </div>
               </div>
@@ -226,7 +234,7 @@ export default function MonsterDrawPage() {
             <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6 border-2 border-red-400">
               <h3 className="text-2xl font-bold text-red-300 mb-4">💡 How It Works</h3>
               <div className="space-y-3 text-orange-100">
-                <p>• Pay {MINT_COST} SUI to open a mystery box</p>
+                <p>• Pay {MINT_COST / 1_000_000_000} GAME to open a mystery box</p>
                 <p>• Get a random monster NFT with unique abilities</p>
                 <p>• Higher rarity = stronger monster</p>
                 <p>• Use monsters to create challenges</p>

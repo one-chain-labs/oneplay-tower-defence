@@ -1,10 +1,11 @@
-// Tower Defense Game Constants
+// Tower Defense Game Constants (OneChain Testnet)
 
-export const PACKAGE_ID = '0xb94bc0f0f0b5fa9d331d8102ebc3f40d5bb0a416087e4d87b38d7bda3f7207e8';
-export const GAME_STATE_ID = '0xcc262164570eb60efb37571f05a93ecf2128fa7c40927e056ca1025901ac2e24';
+export const PACKAGE_ID = '0x6ceb186a10c9bf808a36f68419e95d52a8bebb0069a7a3999e757e4ae6ba23af';
+export const GAME_STATE_ID = '0xe68662ca211a2038ea937ed8f1388e94b8068bf9e02c5a0cbbf9483ec43d6c88';
+export const TOKEN_TREASURY_ID = '0x3b7573cb72575e232f628f7a9dce92bdd0f4e662f1e1724be573dcd22133496a';
 
-export const MINT_COST = 0.001; // SUI to mint tower NFT
-export const GAME_COST = 0.0005; // SUI to play game
+export const MINT_COST = 1_000_000_000; // 1 GAME to mint tower NFT (in smallest units)
+export const GAME_COST = 500_000_000; // 0.5 GAME to play game (in smallest units)
 export const MAX_WAVES = 5;
 
 // Game rewards

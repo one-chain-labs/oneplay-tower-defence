@@ -13,7 +13,7 @@ import { useCurrentAccount } from '@mysten/dapp-kit';
 import '@mysten/dapp-kit/dist/index.css';
 
 const networks = {
-  testnet: { url: getFullnodeUrl('testnet') },
+  testnet: { url: 'https://rpc-testnet.onelabs.cc' },
   mainnet: { url: getFullnodeUrl('mainnet') },
 };
 
@@ -64,7 +64,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <SuiClientProvider networks={networks} defaultNetwork="testnet">
         <WalletProvider 
           autoConnect
-          preferredWallets={['OneWallet']}
+          preferredWallets={['Sui Wallet', 'OneWallet']}
         >
           <div className="min-h-screen">
             <NavBar />

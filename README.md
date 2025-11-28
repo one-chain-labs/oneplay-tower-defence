@@ -41,7 +41,7 @@
 ### � Towetr NFT System
 
 **Lucky Draw Mechanism**
-- 💎 Pay **0.001 SUI** to mint a random tower
+- 💎 Pay **1 GAME** to mint a random tower
 - 🎲 Provably fair randomness using Sui's UID
 - 📊 4 rarity tiers with different drop rates
 - ⚡ Instant minting and ownership
@@ -66,7 +66,7 @@
 ### 👹 Monster NFT System
 
 **Monster Draw**
-- 🎃 Pay **0.001 SUI** to mint a random monster
+- 🎃 Pay **1 GAME** to mint a random monster
 - 🎭 3 unique monster types
 - 💪 Varying stats based on type
 - 🎯 Use for creating challenges
@@ -89,7 +89,7 @@
 ### 🎯 Tower Defense Gameplay
 
 **Game Flow**
-1. 💰 Pay **0.0005 SUI** to start a game session
+1. 💰 Pay **0.5 GAME** to start a game session
 2. 🗼 Select a tower from your inventory
 3. 🎮 Place towers strategically on the map
 4. 👾 Defend against 5 waves of monsters
@@ -112,7 +112,7 @@ Wave 5 Cleared → 80% NFT drop chance (Epic-Legendary)
 ### 🏪 Marketplace
 
 **Trading Features**
-- 📝 **List Towers**: Set your own price in SUI
+- 📝 **List Towers**: Set your own price in GAME
 - 🛒 **Buy Towers**: Purchase from other players
 - ❌ **Cancel Listings**: Remove anytime before sale
 - 💸 **Direct P2P**: No platform fees
@@ -157,8 +157,9 @@ Before you begin, ensure you have the following installed:
 - ✅ [Sui CLI](https://docs.sui.io/build/install) - For smart contract deployment
 - ✅ [Node.js 18+](https://nodejs.org/) - For running the frontend
 - ✅ [Git](https://git-scm.com/) - For cloning the repository
-- ✅ Sui Wallet Extension - [Sui Wallet](https://chrome.google.com/webstore/detail/sui-wallet) or [Suiet](https://suiet.app/)
-- ✅ Testnet SUI - Get free tokens from [Sui Faucet](https://faucet.sui.io)
+- ✅ Sui Wallet Extension - [Sui Wallet](https://chrome.google.com/webstore/detail/sui-wallet) or [OneWallet](https://onewallet.app/)
+- ✅ Testnet OCT - Get free tokens from [OneChain Faucet](https://faucet.onelabs.cc/)
+- ✅ GAME Tokens - Claim free GAME tokens from the in-game faucet (10 GAME per claim)
 
 ### 🎮 Play Now (Easiest)
 
@@ -168,9 +169,10 @@ Just visit our deployed version:
 Watch the demo video:
 📹 **[YouTube Demo](https://www.youtube.com/watch?v=XD25M8ozAd8)**
 
-1. Connect your Sui wallet
-2. Get testnet SUI from the faucet
-3. Start playing!
+1. Connect your Sui wallet (OneWallet recommended)
+2. Get testnet OCT from the OneChain faucet (for gas fees)
+3. Claim free GAME tokens from the in-game faucet
+4. Start playing!
 
 ### 💻 Local Development
 
@@ -253,12 +255,13 @@ tower-defense-gamefi/
 
 ## 🎯 How to Play
 
-1. **Connect Wallet** - Connect your Sui wallet (Sui Wallet, Suiet, etc.)
-2. **Mint Tower** - Pay 0.001 SUI to get a random tower NFT
-3. **Select Tower** - Choose a tower from your inventory
-4. **Play Game** - Pay 0.0005 SUI to start the tower defense game
-5. **Earn Rewards** - Clear waves to earn more tower NFTs!
-6. **Trade** - List your towers on the marketplace or buy from others
+1. **Connect Wallet** - Connect your Sui wallet (Sui Wallet, OneWallet, etc.)
+2. **Claim GAME Tokens** - Get free GAME tokens from the faucet (10 GAME)
+3. **Mint Tower** - Pay 1 GAME to get a random tower NFT
+4. **Select Tower** - Choose a tower from your inventory
+5. **Play Game** - Pay 0.5 GAME to start the tower defense game
+6. **Earn Rewards** - Clear waves to earn more tower NFTs!
+7. **Trade** - List your towers on the marketplace or buy from others
 
 ## 💎 NFT Rarity System
 
@@ -356,7 +359,7 @@ tower-defense-gamefi/
 <td width="33%">
 
 **🗼 Tower Minting**
-- Cost: **0.001 SUI**
+- Cost: **1 GAME**
 - Goes to: Game Treasury
 - Purpose: NFT creation
 - Frequency: Unlimited
@@ -365,7 +368,7 @@ tower-defense-gamefi/
 <td width="33%">
 
 **👹 Monster Minting**
-- Cost: **0.001 SUI**
+- Cost: **1 GAME**
 - Goes to: Game Treasury
 - Purpose: Challenge creation
 - Frequency: Unlimited
@@ -374,7 +377,7 @@ tower-defense-gamefi/
 <td width="33%">
 
 **🎮 Game Sessions**
-- Cost: **0.0005 SUI**
+- Cost: **0.5 GAME**
 - Goes to: Reward Pool
 - Purpose: Play-to-earn
 - Frequency: Per game
@@ -492,13 +495,19 @@ Wave 5: 80% × (Epic: 50%, Legendary: 50%)
 
 ## 🔗 Deployed Contract
 
-**Network**: Sui Testnet
+**Network**: OneChain Testnet
 
-**Package ID**: `0x59eddd626b56b87be2673bdfa42d1cf5a2fa4703752781b9e2bb4ff623d218ec`
+**Package ID**: `0x6ceb186a10c9bf808a36f68419e95d52a8bebb0069a7a3999e757e4ae6ba23af`
 
-**GameState**: `0xca88a092ca23c88f2ef2fa936fced6d058c035fb61ddf7b7dd86c4c1c8169c5e`
+**GameState**: `0xe68662ca211a2038ea937ed8f1388e94b8068bf9e02c5a0cbbf9483ec43d6c88`
 
-**Explorer**: [View on Suiscan](https://suiscan.xyz/testnet/object/0x59eddd626b56b87be2673bdfa42d1cf5a2fa4703752781b9e2bb4ff623d218ec)
+**TokenTreasury**: `0x3b7573cb72575e232f628f7a9dce92bdd0f4e662f1e1724be573dcd22133496a`
+
+**Token Type**: `GAME` (Tower Defense Token)
+
+**Explorer**: [View on OneChain Explorer](https://explorer.onelabs.cc/object/0x6ceb186a10c9bf808a36f68419e95d52a8bebb0069a7a3999e757e4ae6ba23af?network=testnet)
+
+**RPC**: https://rpc-testnet.onelabs.cc
 
 ---
 
@@ -656,11 +665,12 @@ copies of the Software.
 
 This is a testnet project built for educational and demonstration purposes. 
 
-- 🧪 Currently deployed on **Sui Testnet**
-- 💰 Uses **test SUI tokens** with no real value
+- 🧪 Currently deployed on **OneChain Testnet**
+- 💰 Uses **test GAME tokens** with no real value
 - 🔒 Smart contracts are **not audited**
 - 🎮 Play at your own risk
 - 📝 Not financial advice
+- 🎁 Free GAME tokens available via in-game faucet
 
 ---
 

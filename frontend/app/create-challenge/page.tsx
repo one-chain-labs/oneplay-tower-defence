@@ -70,7 +70,7 @@ export default function CreateChallengePage() {
     }
   }, [ownedMonsters]);
 
-  const handleCreateChallenge = () => {
+  const handleCreateChallenge = async () => {
     if (!account || !selectedMonster) {
       setMessage('Please select a monster');
       return;
@@ -98,7 +98,27 @@ export default function CreateChallengePage() {
     setLoading(true);
     const tx = new Transaction();
     
-    const [prizeCoin] = tx.splitCoins(tx.gas, [prize * 1_000_000_000]);
+    // Get GAME token
+    const gameCoinsResponse = await fetch('https://rpc-testnet.onelabs.cc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'suix_getCoins',
+        params: [account.address, `${PACKAGE_ID}::game::GAME`],
+      }),
+    });
+    const gameCoinsData = await gameCoinsResponse.json();
+    const gameCoin = gameCoinsData.result?.data[0];
+    
+    if (!gameCoin) {
+      setMessage('❌ No GAME tokens found!');
+      setLoading(false);
+      return;
+    }
+    
+    const [prizeCoin] = tx.splitCoins(tx.object(gameCoin.coinObjectId), [prize * 1_000_000_000]);
     
     tx.moveCall({
       target: `${PACKAGE_ID}::game::create_challenge`,
@@ -114,7 +134,7 @@ export default function CreateChallengePage() {
       { transaction: tx as any },
       {
         onSuccess: () => {
-          setMessage(`🎉 Challenge created! Prize: ${prize} SUI, Entry: ${fee} SUI`);
+          setMessage(`🎉 Challenge created! Prize: ${prize} GAME, Entry: ${fee} GAME`);
           setLoading(false);
           setSelectedMonster(null);
           setPrizePool('');
@@ -230,7 +250,7 @@ export default function CreateChallengePage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-gray-400 text-sm mb-2 block">Initial Prize Pool (SUI):</label>
+                  <label className="text-gray-400 text-sm mb-2 block">Initial Prize Pool (GAME):</label>
                   <input
                     type="number"
                     step="0.001"
@@ -244,7 +264,7 @@ export default function CreateChallengePage() {
                 </div>
 
                 <div>
-                  <label className="text-gray-400 text-sm mb-2 block">Entry Fee (SUI):</label>
+                  <label className="text-gray-400 text-sm mb-2 block">Entry Fee (GAME):</label>
                   <input
                     type="number"
                     step="0.001"
@@ -276,20 +296,20 @@ export default function CreateChallengePage() {
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Your Investment:</span>
-                        <span className="text-red-400">-{prizePool} SUI</span>
+                        <span className="text-red-400">-{prizePool} GAME</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Max Entry Fees:</span>
-                        <span className="text-green-400">+{(parseFloat(entryFee) * parseInt(maxWinners)).toFixed(3)} SUI</span>
+                        <span className="text-green-400">+{(parseFloat(entryFee) * parseInt(maxWinners)).toFixed(3)} GAME</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Reward per Winner:</span>
-                        <span className="text-yellow-400">{(parseFloat(prizePool) / parseInt(maxWinners)).toFixed(3)} SUI</span>
+                        <span className="text-yellow-400">{(parseFloat(prizePool) / parseInt(maxWinners)).toFixed(3)} GAME</span>
                       </div>
                       <div className="border-t border-gray-700 pt-2 mt-2 flex justify-between">
                         <span className="text-white font-bold">Est. Profit:</span>
                         <span className={`font-bold ${estimatedProfit() >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {estimatedProfit() >= 0 ? '+' : ''}{estimatedProfit().toFixed(3)} SUI
+                          {estimatedProfit() >= 0 ? '+' : ''}{estimatedProfit().toFixed(3)} GAME
                         </span>
                       </div>
                     </div>

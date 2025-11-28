@@ -662,6 +662,7 @@ function PlayChallengeContent() {
         state.gameOver = true;
         state.isWaveActive = false;
         setMessage('💀 Game Over! Monster reached the end!');
+        forceUpdate(v => v + 1);
       }
 
       // Check victory
@@ -669,6 +670,7 @@ function PlayChallengeContent() {
         state.victory = true;
         state.isWaveActive = false;
         setMessage('🎉 Victory! All monsters defeated!');
+        forceUpdate(v => v + 1);
       }
 
       if (!state.gameOver && !state.victory) {
@@ -683,62 +685,135 @@ function PlayChallengeContent() {
     };
   }, [monsterHp, monsterSpeed, monsterType]);
 
-  const handleSubmitResult = () => {
-    if (!account || !challengeId) return;
-    if (submitting || submitted) return; // Prevent double submission
+  const handleSubmitResult = async () => {
+    console.log('handleSubmitResult called', { 
+      account: account?.address, 
+      challengeId, 
+      submitting, 
+      submitted 
+    });
+    
+    if (!account) {
+      console.log('Missing account');
+      setMessage('❌ Please connect wallet');
+      return;
+    }
+    
+    if (!challengeId) {
+      console.log('Missing challengeId');
+      setMessage('❌ Invalid challenge ID');
+      return;
+    }
+    if (submitting || submitted) {
+      console.log('Already submitting or submitted');
+      return;
+    }
 
     const state = gameStateRef.current;
     const success = state.victory;
+    
+    console.log('Submitting result:', { success, gameOver: state.gameOver, victory: state.victory });
 
     setSubmitting(true);
+    setMessage(success ? '🎉 Submitting victory...' : '💀 Submitting defeat...');
+    
     const tx = new Transaction();
     
-    const [coin] = tx.splitCoins(tx.gas, [entryFee * 1_000_000_000]);
-    
-    tx.moveCall({
-      target: `${PACKAGE_ID}::game::play_challenge`,
-      arguments: [
-        tx.object(challengeId),
-        coin,
-        tx.pure.bool(success),
-      ],
-    });
-
-    signAndExecute(
-      { transaction: tx as any },
-      {
-        onSuccess: () => {
-          setSubmitted(true);
-          if (success) {
-            setMessage('🎉 Challenge completed! Reward sent to your wallet!');
-          } else {
-            setMessage('💀 Challenge failed. Entry fee forfeited.');
-          }
-          setSubmitting(false);
-          
-          // Auto-redirect to challenge list after 3 seconds
-          setTimeout(() => {
-            window.location.href = '/challenge-list';
-          }, 3000);
-        },
-        onError: (error: any) => {
-          setMessage(`❌ Error: ${error.message}`);
-          setSubmitting(false);
-        },
+    try {
+      // Get GAME token
+      console.log('Fetching GAME tokens...');
+      const gameCoinsResponse = await fetch('https://rpc-testnet.onelabs.cc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'suix_getCoins',
+          params: [account.address, `${PACKAGE_ID}::game::GAME`],
+        }),
+      });
+      const gameCoinsData = await gameCoinsResponse.json();
+      console.log('GAME tokens response:', gameCoinsData);
+      const gameCoin = gameCoinsData.result?.data[0];
+      
+      if (!gameCoin) {
+        setMessage('❌ No GAME tokens found!');
+        setSubmitting(false);
+        return;
       }
-    );
+      
+      console.log('Building transaction...');
+      const entryFeeAmount = Math.floor(entryFee * 1_000_000_000);
+      console.log('Entry fee amount:', entryFeeAmount);
+      console.log('Challenge ID:', challengeId);
+      console.log('Success:', success);
+      
+      const [coin] = tx.splitCoins(tx.object(gameCoin.coinObjectId), [entryFeeAmount]);
+      
+      tx.moveCall({
+        target: `${PACKAGE_ID}::game::play_challenge`,
+        arguments: [
+          tx.object(challengeId),
+          coin,
+          tx.pure.bool(success),
+        ],
+      });
+      
+      console.log('Transaction built successfully');
+
+      console.log('Executing transaction...');
+      signAndExecute(
+        { transaction: tx as any },
+        {
+          onSuccess: () => {
+            console.log('Transaction successful!');
+            setSubmitted(true);
+            if (success) {
+              setMessage('🎉 Challenge completed! Reward sent to your wallet!');
+            } else {
+              setMessage('💀 Challenge failed. Entry fee forfeited.');
+            }
+            setSubmitting(false);
+            
+            // Auto-redirect to challenge list after 3 seconds
+            setTimeout(() => {
+              window.location.href = '/challenge-list';
+            }, 3000);
+          },
+          onError: (error: any) => {
+            console.error('Transaction error:', error);
+            setMessage(`❌ Error: ${error.message}`);
+            setSubmitting(false);
+          },
+        }
+      );
+    } catch (error: any) {
+      console.error('Error in handleSubmitResult:', error);
+      setMessage(`❌ Error: ${error.message}`);
+      setSubmitting(false);
+    }
   };
 
   // Auto-submit when game ends
   useEffect(() => {
-    const state = gameStateRef.current;
-    if ((state.gameOver || state.victory) && !submitting && !submitted) {
-      const timer = setTimeout(() => {
+    const checkGameEnd = () => {
+      const state = gameStateRef.current;
+      console.log('Checking game end:', { 
+        gameOver: state.gameOver, 
+        victory: state.victory, 
+        submitting, 
+        submitted 
+      });
+      
+      if ((state.gameOver || state.victory) && !submitting && !submitted) {
+        console.log('Auto-submitting result...');
         handleSubmitResult();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [gameStateRef.current.gameOver, gameStateRef.current.victory, submitting, submitted]);
+      }
+    };
+
+    const interval = setInterval(checkGameEnd, 1000);
+    return () => clearInterval(interval);
+  }, [submitting, submitted, handleSubmitResult]);
 
   const state = gameStateRef.current;
 

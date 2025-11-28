@@ -1,8 +1,8 @@
 module tower_defense::game {
     use sui::coin::{Self, Coin};
-    use sui::balance::{Self, Balance};
-    use sui::sui::SUI;
+    use sui::balance::{Self, Balance, Supply};
     use sui::event;
+    use std::option;
 
     // ===== Errors =====
     const EInsufficientPayment: u64 = 1;
@@ -14,16 +14,25 @@ module tower_defense::game {
     const EInsufficientPrizePool: u64 = 8;
 
     // ===== Constants =====
-    const MINT_COST: u64 = 1_000_000; // 0.001 SUI
-    const GAME_COST: u64 = 500_000; // 0.0005 SUI
+    const MINT_COST: u64 = 1_000_000_000; // 1 GAME
+    const GAME_COST: u64 = 500_000_000; // 0.5 GAME
     const MAX_WAVES: u8 = 5;
 
     // ===== Structs =====
     
+    /// One-time witness for token creation
+    public struct GAME has drop {}
+
+    /// Token treasury for minting game tokens
+    public struct TokenTreasury has key {
+        id: UID,
+        supply: Supply<GAME>,
+    }
+    
     /// Global game state
     public struct GameState has key {
         id: UID,
-        treasury: Balance<SUI>,
+        treasury: Balance<GAME>,
         total_towers_minted: u64,
         total_games_played: u64,
     }
@@ -55,7 +64,7 @@ module tower_defense::game {
         id: UID,
         creator: address,
         monster: MonsterNFT,
-        prize_pool: Balance<SUI>,
+        prize_pool: Balance<GAME>,
         entry_fee: u64,
         max_winners: u64,
         current_winners: u64,
@@ -136,22 +145,56 @@ module tower_defense::game {
 
     // ===== Init =====
     
-    fun init(ctx: &mut TxContext) {
+    fun init(witness: GAME, ctx: &mut TxContext) {
+        // Create custom token
+        let (treasury_cap, metadata) = coin::create_currency(
+            witness,
+            9, // decimals
+            b"TOWER",
+            b"Tower Defense Token",
+            b"Earn tokens by playing Tower Defense",
+            option::none(),
+            ctx
+        );
+
+        // Create token treasury
+        let token_treasury = TokenTreasury {
+            id: object::new(ctx),
+            supply: coin::treasury_into_supply(treasury_cap),
+        };
+
+        // Create game state
         let game_state = GameState {
             id: object::new(ctx),
             treasury: balance::zero(),
             total_towers_minted: 0,
             total_games_played: 0,
         };
+
+        // Share objects
         transfer::share_object(game_state);
+        transfer::share_object(token_treasury);
+        transfer::public_freeze_object(metadata);
     }
 
     // ===== Public Functions =====
     
+    /// Faucet - Give free GAME tokens to new players
+    public entry fun claim_faucet(
+        treasury: &mut TokenTreasury,
+        ctx: &mut TxContext
+    ) {
+        // Give 10 GAME tokens (enough for 10 mints)
+        let faucet_amount = 10_000_000_000; // 10 GAME
+        let minted_balance = balance::increase_supply(&mut treasury.supply, faucet_amount);
+        let faucet_coin = coin::from_balance(minted_balance, ctx);
+        transfer::public_transfer(faucet_coin, ctx.sender());
+    }
+    
     /// Mint a random tower NFT
     public entry fun mint_tower(
         game_state: &mut GameState,
-        payment: Coin<SUI>,
+        payment: Coin<GAME>,
         ctx: &mut TxContext
     ) {
         let paid_amount = coin::value(&payment);
@@ -193,7 +236,7 @@ module tower_defense::game {
     public entry fun play_and_submit(
         game_state: &mut GameState,
         tower: TowerNFT,
-        payment: Coin<SUI>,
+        payment: Coin<GAME>,
         waves_cleared: u8,
         ctx: &mut TxContext
     ) {
@@ -450,7 +493,7 @@ module tower_defense::game {
     /// Buy a listed tower
     public entry fun buy_tower(
         listing: Listing,
-        payment: Coin<SUI>,
+        payment: Coin<GAME>,
         ctx: &mut TxContext
     ) {
         let Listing { id, tower, price, seller } = listing;
@@ -502,7 +545,7 @@ module tower_defense::game {
     /// Mint a random monster NFT
     public entry fun mint_monster(
         game_state: &mut GameState,
-        payment: Coin<SUI>,
+        payment: Coin<GAME>,
         ctx: &mut TxContext
     ) {
         let paid_amount = coin::value(&payment);
@@ -597,7 +640,7 @@ module tower_defense::game {
     /// Create a custom challenge
     public entry fun create_challenge(
         monster: MonsterNFT,
-        initial_prize: Coin<SUI>,
+        initial_prize: Coin<GAME>,
         entry_fee: u64,
         max_winners: u64,
         ctx: &mut TxContext
@@ -637,7 +680,7 @@ module tower_defense::game {
     /// Play a challenge
     public entry fun play_challenge(
         challenge: &mut Challenge,
-        payment: Coin<SUI>,
+        payment: Coin<GAME>,
         success: bool,
         ctx: &mut TxContext
     ) {

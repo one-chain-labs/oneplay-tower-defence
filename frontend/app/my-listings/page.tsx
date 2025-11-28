@@ -130,13 +130,18 @@ export default function MyListingsPage() {
         return;
       }
 
+      console.log('My address:', account.address);
+      console.log('Listed events:', listedEvents);
+
       // Get user's active listing IDs
       const userListingIds = new Set<string>();
       const removed = new Set<string>();
 
       // Add user's listings
       listedEvents?.data?.forEach((event: any) => {
+        console.log('Event seller:', event.parsedJson?.seller, 'My address:', account.address);
         if (event.parsedJson?.seller === account.address) {
+          console.log('Found my listing:', event.parsedJson.listing_id);
           userListingIds.add(event.parsedJson.listing_id);
         }
       });
@@ -157,6 +162,7 @@ export default function MyListingsPage() {
 
       // Active = listed - removed
       const activeIds = [...userListingIds].filter(id => !removed.has(id));
+      console.log('My active listing IDs:', activeIds);
 
       if (activeIds.length === 0) {
         setMyListings([]);
@@ -167,7 +173,7 @@ export default function MyListingsPage() {
       try {
         const listingPromises = activeIds.map(async (id) => {
           try {
-            const response = await fetch('https://fullnode.testnet.sui.io:443', {
+            const response = await fetch('https://rpc-testnet.onelabs.cc', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -245,7 +251,7 @@ export default function MyListingsPage() {
       { transaction: tx as any },
       {
         onSuccess: () => {
-          setMessage(`🎉 Tower listed for ${price} SUI!`);
+          setMessage(`🎉 Tower listed for ${price} GAME!`);
           setLoading(false);
           setSelectedTower(null);
           setListPrice('');
@@ -367,7 +373,7 @@ export default function MyListingsPage() {
               {selectedTower && (
                 <>
                   <div className="mb-4">
-                    <label className="text-gray-400 text-sm mb-2 block">Price (SUI):</label>
+                    <label className="text-gray-400 text-sm mb-2 block">Price (GAME):</label>
                     <input
                       type="number"
                       step="0.001"
@@ -411,7 +417,7 @@ export default function MyListingsPage() {
                         <span className={`font-bold ${RARITY_COLORS[listing.rarity]}`}>
                           {RARITY_NAMES[listing.rarity]}
                         </span>
-                        <span className="text-yellow-400 font-bold">{listing.price} SUI</span>
+                        <span className="text-yellow-400 font-bold">{listing.price} GAME</span>
                       </div>
 
                       <div className="grid grid-cols-3 gap-2 mb-3 text-sm">
