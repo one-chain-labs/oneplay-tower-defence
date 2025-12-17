@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@mysten/dapp-kit';
-import { Transaction } from '@mysten/sui/transactions';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@onelabs/dapp-kit';
+import { Transaction } from '@onelabs/sui/transactions';
 import { playAndSubmit } from '@/lib/contracts';
 import { GAME_COST, PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
@@ -1723,7 +1723,7 @@ function PlayPageContent() {
                     disabled={submitting}
                     className="w-full bg-gradient-to-r from-cyan-400 to-blue-400 text-gray-900 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg disabled:opacity-50"
                   >
-                    {submitting ? '⏳ Submitting...' : `📤 Submit Result (${GAME_COST} SUI)`}
+                    {submitting ? '⏳ Submitting...' : `📤 Submit Result (${GAME_COST} OCT)`}
                   </button>
                 ) : (
                   // Failed - Show sacrifice selection

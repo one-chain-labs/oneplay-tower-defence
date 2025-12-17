@@ -3,8 +3,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Tower Defense GameFi - Play to Earn on Sui',
-  description: 'A blockchain tower defense game on Sui Network. Mint NFT towers and monsters, play strategic gameplay, earn rewards, and trade on the marketplace!',
+  title: 'Tower Defense GameFi - Play to Earn on Onechain',
+  description: 'A blockchain tower defense game on Onechain Network. Mint NFT towers and monsters, play strategic gameplay, earn rewards, and trade on the marketplace!',
   icons: {
     icon: '/logo.png',
     shortcut: '/logo.png',

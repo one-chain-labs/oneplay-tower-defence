@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useCurrentAccount, useSuiClientQuery } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSuiClientQuery } from '@onelabs/dapp-kit';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

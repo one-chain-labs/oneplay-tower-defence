@@ -5,12 +5,12 @@ import {
   SuiClientProvider, 
   WalletProvider,
   ConnectButton 
-} from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/sui/client';
+} from '@onelabs/dapp-kit';
+import { getFullnodeUrl } from '@onelabs/sui/client';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useCurrentAccount } from '@mysten/dapp-kit';
-import '@mysten/dapp-kit/dist/index.css';
+import { useCurrentAccount } from '@onelabs/dapp-kit';
+import '@onelabs/dapp-kit/dist/index.css';
 
 const networks = {
   testnet: { url: 'https://rpc-testnet.onelabs.cc' },

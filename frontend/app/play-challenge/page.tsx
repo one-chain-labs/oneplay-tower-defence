@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@mysten/dapp-kit';
-import { Transaction } from '@mysten/sui/transactions';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@onelabs/dapp-kit';
+import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID } from '@/lib/constants';
 import { drawTower, drawEnemy } from '@/lib/gameRenderer';
 import Link from 'next/link';

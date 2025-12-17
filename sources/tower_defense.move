@@ -1,7 +1,7 @@
 module tower_defense::game {
-    use sui::coin::{Self, Coin};
-    use sui::balance::{Self, Balance, Supply};
-    use sui::event;
+    use one::coin::{Self, Coin};
+    use one::balance::{Self, Balance, Supply};
+    use one::event;
     use std::option;
 
     // ===== Errors =====

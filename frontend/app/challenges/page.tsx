@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@mysten/dapp-kit';
-import { Transaction } from '@mysten/sui/transactions';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@onelabs/dapp-kit';
+import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID, GAME_STATE_ID, MINT_COST } from '@/lib/constants';
 import Link from 'next/link';
 
@@ -193,7 +193,7 @@ export default function ChallengesPage() {
             disabled={!account || loading}
             className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-4 rounded-xl font-bold text-lg hover:from-red-600 hover:to-orange-600 disabled:opacity-50"
           >
-            {loading ? 'Minting...' : `Mint Monster (${MINT_COST} SUI)`}
+            {loading ? 'Minting...' : `Mint Monster (${MINT_COST} OCT)`}
           </button>
         </div>
 

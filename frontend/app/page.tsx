@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { useCurrentAccount } from '@mysten/dapp-kit';
+import { useCurrentAccount } from '@onelabs/dapp-kit';
 
 export default function HomePage() {
   const account = useCurrentAccount();

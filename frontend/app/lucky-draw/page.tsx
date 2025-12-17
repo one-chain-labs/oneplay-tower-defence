@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@mysten/dapp-kit';
-import { Transaction } from '@mysten/sui/transactions';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } from '@onelabs/dapp-kit';
+import { Transaction } from '@onelabs/sui/transactions';
 import { mintTower, claimFaucet } from '@/lib/contracts';
 import { MINT_COST, PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';

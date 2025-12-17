@@ -311,7 +311,7 @@ tower-defense-gamefi/
 - **[React 18](https://react.dev)** - UI library with latest features
 - **[TypeScript](https://www.typescriptlang.org)** - Type-safe development
 - **[Tailwind CSS](https://tailwindcss.com)** - Utility-first styling
-- **[@mysten/dapp-kit](https://sdk.mystenlabs.com/dapp-kit)** - Sui wallet integration
+- **[@onelabs/dapp-kit](https://sdk.mystenlabs.com/dapp-kit)** - Sui wallet integration
 - **[@tanstack/react-query](https://tanstack.com/query)** - Data fetching and caching
 
 </td>
@@ -336,8 +336,8 @@ tower-defense-gamefi/
 
 ```json
 {
-  "@mysten/sui": "^1.0.0",
-  "@mysten/dapp-kit": "^0.14.0",
+  "@onelabs/sui": "^1.0.0",
+  "@onelabs/dapp-kit": "^0.14.0",
   "next": "14.2.0",
   "react": "^18.3.0",
   "typescript": "^5.0.0"

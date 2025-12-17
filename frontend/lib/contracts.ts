@@ -1,4 +1,4 @@
-import { Transaction } from '@mysten/sui/transactions';
+import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID, GAME_STATE_ID, TOKEN_TREASURY_ID } from './constants';
 
 // Claim free GAME tokens from faucet

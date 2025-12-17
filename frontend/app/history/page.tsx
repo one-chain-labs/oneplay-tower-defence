@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCurrentAccount, useSuiClientQuery } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSuiClientQuery } from '@onelabs/dapp-kit';
 import { PACKAGE_ID, REWARDS } from '@/lib/constants';
 import Link from 'next/link';
 
@@ -121,7 +121,7 @@ export default function HistoryPage() {
           sessionId: `challenge-${event.id?.txDigest || event.timestampMs}`,
           player: parsedJson.player,
           wavesCleared: parsedJson.success ? 1 : 0, // 1 for success, 0 for fail
-          reward: Number(parsedJson.reward) / 1_000_000_000, // Convert to SUI
+          reward: Number(parsedJson.reward) / 1_000_000_000, // Convert to OCT
           timestamp: Number(event.timestampMs),
         };
       }
@@ -340,7 +340,7 @@ export default function HistoryPage() {
                           {record.sessionId.startsWith('challenge-') ? (
                             <>
                               <p className={`font-bold text-lg ${record.reward > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {record.reward > 0 ? `+${record.reward.toFixed(3)} SUI` : 'Lost'}
+                                {record.reward > 0 ? `+${record.reward.toFixed(3)} OCT` : 'Lost'}
                               </p>
                               <p className="text-gray-400 text-sm">Challenge</p>
                             </>
@@ -403,12 +403,12 @@ export default function HistoryPage() {
 
                   <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
                     <p className="text-gray-400 text-sm mb-1">Earned</p>
-                    <p className="text-3xl font-bold text-yellow-400">{totalEarned.toFixed(3)} SUI</p>
+                    <p className="text-3xl font-bold text-yellow-400">{totalEarned.toFixed(3)} OCT</p>
                   </div>
 
                   <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
                     <p className="text-gray-400 text-sm mb-1">Spent</p>
-                    <p className="text-3xl font-bold text-purple-400">{totalSpent.toFixed(3)} SUI</p>
+                    <p className="text-3xl font-bold text-purple-400">{totalSpent.toFixed(3)} OCT</p>
                   </div>
                 </div>
 
@@ -477,9 +477,9 @@ export default function HistoryPage() {
                                   tx.type === 'bought' ? 'text-red-400' : 
                                   'text-yellow-400'
                                 }`}>
-                                  {tx.type === 'sold' && `+${tx.price.toFixed(3)} SUI`}
-                                  {tx.type === 'bought' && `-${tx.price.toFixed(3)} SUI`}
-                                  {tx.type === 'listed' && `${tx.price.toFixed(3)} SUI`}
+                                  {tx.type === 'sold' && `+${tx.price.toFixed(3)} OCT`}
+                                  {tx.type === 'bought' && `-${tx.price.toFixed(3)} OCT`}
+                                  {tx.type === 'listed' && `${tx.price.toFixed(3)} OCT`}
                                 </p>
                                 <p className="text-gray-400 text-sm">
                                   {tx.type === 'listed' ? 'Listed Price' : 'Sale Price'}
@@ -503,11 +503,11 @@ export default function HistoryPage() {
                     <div className="bg-gray-900 rounded-lg p-6">
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-gray-300 text-lg">Total Earned:</span>
-                        <span className="text-green-400 font-bold text-xl">+{totalEarned.toFixed(3)} SUI</span>
+                        <span className="text-green-400 font-bold text-xl">+{totalEarned.toFixed(3)} OCT</span>
                       </div>
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-gray-300 text-lg">Total Spent:</span>
-                        <span className="text-red-400 font-bold text-xl">-{totalSpent.toFixed(3)} SUI</span>
+                        <span className="text-red-400 font-bold text-xl">-{totalSpent.toFixed(3)} OCT</span>
                       </div>
                       <div className="border-t border-gray-700 pt-4">
                         <div className="flex justify-between items-center">
@@ -515,7 +515,7 @@ export default function HistoryPage() {
                           <span className={`font-bold text-2xl ${
                             totalEarned - totalSpent >= 0 ? 'text-green-400' : 'text-red-400'
                           }`}>
-                            {totalEarned - totalSpent >= 0 ? '+' : ''}{(totalEarned - totalSpent).toFixed(3)} SUI
+                            {totalEarned - totalSpent >= 0 ? '+' : ''}{(totalEarned - totalSpent).toFixed(3)} OCT
                           </span>
                         </div>
                       </div>
