@@ -5,6 +5,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } fr
 import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID, GAME_STATE_ID, MINT_COST } from '@/lib/constants';
 import Link from 'next/link';
+import { useI18n } from '../providers';
 
 interface MonsterNFT {
   id: string;
@@ -28,14 +29,16 @@ interface Challenge {
   currentWinners: number;
 }
 
-const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
-const TYPE_NAMES = ['', 'Normal', 'Fast', 'Tank'];
 const TYPE_EMOJI = ['', '👹', '⚡', '🛡️'];
 
 export default function ChallengesPage() {
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const { t } = useI18n();
+
+  const RARITY_NAMES = ['', t('Common'), t('Rare'), t('Epic'), t('Legendary')];
+  const TYPE_NAMES = ['', t('Normal'), t('Fast'), t('Tank')];
 
   const [myMonsters, setMyMonsters] = useState<MonsterNFT[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -86,17 +89,17 @@ export default function ChallengesPage() {
         const newMonster = monsters[0]; // Newest monster
         console.log('New monster detected:', newMonster);
         setMintedMonster(newMonster);
-        setMessage('🎉 Monster NFT minted!');
+        setMessage(t('Monster NFT minted!'));
       }
 
       setMyMonsters(monsters);
     }
-  }, [ownedMonsters, showMintCard, mintedMonster]);
+  }, [ownedMonsters, showMintCard, mintedMonster, t]);
 
   // Mint monster
   const handleMintMonster = () => {
     if (!account) {
-      setMessage('Please connect wallet first');
+      setMessage(t('Please connect wallet first'));
       return;
     }
 
@@ -107,7 +110,7 @@ export default function ChallengesPage() {
     setLoading(true);
     setShowMintCard(true);
     setMintedMonster(null); // Reset
-    setMessage('🎰 Minting monster...');
+    setMessage(t('Minting monster...'));
     
     const tx = new Transaction();
     const [coin] = tx.splitCoins(tx.gas, [MINT_COST * 1_000_000_000]);
@@ -125,13 +128,13 @@ export default function ChallengesPage() {
         onSuccess: () => {
           console.log('Monster minted successfully');
           setLoading(false);
-          setMessage('🎰 Opening mystery box...');
+          setMessage(t('Opening mystery box...'));
           
           // Trigger refetch
           refetchMonsters();
         },
         onError: (error: any) => {
-          setMessage(`❌ Error: ${error.message}`);
+          setMessage(`${t('Error: ')}${error.message}`);
           setLoading(false);
           setShowMintCard(false);
         },
@@ -143,19 +146,19 @@ export default function ChallengesPage() {
     <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-7xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-white">👹 Monster & Challenges</h1>
+          <h1 className="text-4xl font-bold text-white">{t('Monster & Challenges')}</h1>
           <div className="flex gap-4">
             <Link
               href="/create-challenge"
               className="bg-purple-500 text-white px-6 py-2 rounded-xl hover:bg-purple-600 font-bold"
             >
-              Create Challenge
+              {t('Create Challenge')}
             </Link>
             <Link
               href="/"
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
             >
-              ← Back to Town
+              {t('Back to Town')}
             </Link>
           </div>
         </div>
@@ -168,23 +171,23 @@ export default function ChallengesPage() {
 
         {/* Mint Monster */}
         <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700 mb-6">
-          <h2 className="text-2xl font-bold text-white mb-4">🎁 Mint Monster NFT</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">{t('Mint Monster NFT')}</h2>
           <p className="text-gray-300 mb-4">
-            Create your own monster to build custom challenges!
+            {t('Create your own monster to build custom challenges!')}
           </p>
 
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="bg-gray-900 rounded-lg p-3">
-              <p className="text-gray-400 text-sm">👹 Normal</p>
-              <p className="text-white text-xs">Balanced HP & Speed</p>
+              <p className="text-gray-400 text-sm">{t('Normal')}</p>
+              <p className="text-white text-xs">{t('Balanced HP & Speed')}</p>
             </div>
             <div className="bg-gray-900 rounded-lg p-3">
-              <p className="text-blue-400 text-sm">⚡ Fast</p>
-              <p className="text-white text-xs">Low HP, High Speed</p>
+              <p className="text-blue-400 text-sm">{t('Fast')}</p>
+              <p className="text-white text-xs">{t('Low HP, High Speed')}</p>
             </div>
             <div className="bg-gray-900 rounded-lg p-3">
-              <p className="text-purple-400 text-sm">🛡️ Tank</p>
-              <p className="text-white text-xs">High HP, Low Speed</p>
+              <p className="text-purple-400 text-sm">{t('Tank')}</p>
+              <p className="text-white text-xs">{t('High HP, Low Speed')}</p>
             </div>
           </div>
 
@@ -193,20 +196,20 @@ export default function ChallengesPage() {
             disabled={!account || loading}
             className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-4 rounded-xl font-bold text-lg hover:from-red-600 hover:to-orange-600 disabled:opacity-50"
           >
-            {loading ? 'Minting...' : `Mint Monster (${MINT_COST} OCT)`}
+            {loading ? t('Minting...') : `${t('Mint Monster')} (1 GAME)`}
           </button>
         </div>
 
         {/* My Monsters */}
         <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
           <h2 className="text-2xl font-bold text-white mb-4">
-            👾 My Monsters ({myMonsters.length})
+            {t('My Monsters')} ({myMonsters.length})
           </h2>
 
           {myMonsters.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-400 text-lg mb-4">No monsters yet</p>
-              <p className="text-gray-500">Mint your first monster!</p>
+              <p className="text-gray-400 text-lg mb-4">{t('No monsters yet')}</p>
+              <p className="text-gray-500">{t('Mint your first monster!')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -226,15 +229,15 @@ export default function ChallengesPage() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Type:</span>
+                      <span className="text-gray-400">{t('Type:')}</span>
                       <span className="text-white font-bold">{TYPE_NAMES[monster.monsterType]}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">❤️ HP:</span>
+                      <span className="text-gray-400">{t('HP:')}</span>
                       <span className="text-white font-bold">{monster.hp}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">⚡ Speed:</span>
+                      <span className="text-gray-400">{t('Speed:')}</span>
                       <span className="text-white font-bold">{monster.speed}</span>
                     </div>
                   </div>
@@ -249,7 +252,7 @@ export default function ChallengesPage() {
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
             <div className="bg-gradient-to-br from-red-900 to-orange-900 rounded-2xl p-8 border-4 border-yellow-500 max-w-md w-full mx-4">
               <h2 className="text-3xl font-bold text-white text-center mb-6">
-                🎁 Monster Box
+                {t('Monster Box')}
               </h2>
               
               {!mintedMonster ? (
@@ -257,7 +260,7 @@ export default function ChallengesPage() {
                   <div className="w-32 h-32 mx-auto mb-4 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl animate-bounce flex items-center justify-center">
                     <span className="text-6xl">📦</span>
                   </div>
-                  <p className="text-white text-xl font-bold">Opening box...</p>
+                  <p className="text-white text-xl font-bold">{t('Opening box...')}</p>
                 </div>
               ) : (
                 <div className="text-center">
@@ -267,16 +270,16 @@ export default function ChallengesPage() {
                   <p className={`text-3xl font-bold mb-2 ${RARITY_COLORS[mintedMonster.rarity]}`}>
                     {RARITY_NAMES[mintedMonster.rarity]}
                   </p>
-                  <p className="text-white text-xl mb-4">{TYPE_NAMES[mintedMonster.monsterType]} Monster!</p>
+                  <p className="text-white text-xl mb-4">{TYPE_NAMES[mintedMonster.monsterType]}{t(' Monster!')}</p>
                   
                   <div className="bg-gray-800 rounded-lg p-4 mb-4">
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">❤️ HP:</span>
+                        <span className="text-gray-400">{t('HP:')}</span>
                         <span className="text-white font-bold">{mintedMonster.hp}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">⚡ Speed:</span>
+                        <span className="text-gray-400">{t('Speed:')}</span>
                         <span className="text-white font-bold">{mintedMonster.speed}</span>
                       </div>
                     </div>
@@ -289,7 +292,7 @@ export default function ChallengesPage() {
                     }}
                     className="bg-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600"
                   >
-                    Awesome!
+                    {t('Awesome!')}
                   </button>
                 </div>
               )}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCurrentAccount, useSuiClientQuery } from '@onelabs/dapp-kit';
 import { PACKAGE_ID, REWARDS } from '@/lib/constants';
 import Link from 'next/link';
+import { useI18n } from '../providers';
 
 interface GameRecord {
   sessionId: string;
@@ -26,6 +27,7 @@ interface MarketTransaction {
 export default function HistoryPage() {
   const account = useCurrentAccount();
   const [activeTab, setActiveTab] = useState<'games' | 'market'>('games');
+  const { t } = useI18n();
 
   // Fetch game completed events
   const { data: events } = useSuiClientQuery(
@@ -121,7 +123,7 @@ export default function HistoryPage() {
           sessionId: `challenge-${event.id?.txDigest || event.timestampMs}`,
           player: parsedJson.player,
           wavesCleared: parsedJson.success ? 1 : 0, // 1 for success, 0 for fail
-          reward: Number(parsedJson.reward) / 1_000_000_000, // Convert to OCT
+          reward: Number(parsedJson.reward) / 1_000_000_000, // Convert to GAME
           timestamp: Number(event.timestampMs),
         };
       }
@@ -217,18 +219,18 @@ export default function HistoryPage() {
     <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-6xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-white">📊 Game History</h1>
+          <h1 className="text-4xl font-bold text-white">{t('Game History')}</h1>
           <Link
             href="/"
             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
           >
-            ← Back to Town
+            {t('Back to Town')}
           </Link>
         </div>
 
         {!account && (
           <div className="bg-red-500/20 border border-red-500 rounded-xl p-6 text-center">
-            <p className="text-white text-lg">Please connect your wallet to view history</p>
+            <p className="text-white text-lg">{t('Please connect your wallet to view history')}</p>
           </div>
         )}
 
@@ -244,7 +246,7 @@ export default function HistoryPage() {
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
               >
-                🎮 Game History
+                {t('Game History Tab')}
               </button>
               <button
                 onClick={() => setActiveTab('market')}
@@ -254,7 +256,7 @@ export default function HistoryPage() {
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
               >
-                🏪 Market History
+                {t('Market History Tab')}
               </button>
             </div>
 
@@ -263,38 +265,38 @@ export default function HistoryPage() {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                <p className="text-gray-400 text-sm mb-1">Total Games</p>
+                <p className="text-gray-400 text-sm mb-1">{t('Total Games')}</p>
                 <p className="text-3xl font-bold text-white">{totalGames}</p>
               </div>
 
               <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                <p className="text-gray-400 text-sm mb-1">Victories</p>
+                <p className="text-gray-400 text-sm mb-1">{t('Victories')}</p>
                 <p className="text-3xl font-bold text-green-400">{victories}</p>
               </div>
 
               <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                <p className="text-gray-400 text-sm mb-1">Avg Waves</p>
+                <p className="text-gray-400 text-sm mb-1">{t('Avg Waves')}</p>
                 <p className="text-3xl font-bold text-blue-400">{avgWaves.toFixed(1)}</p>
               </div>
 
               <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                <p className="text-gray-400 text-sm mb-1">NFT Rewards</p>
+                <p className="text-gray-400 text-sm mb-1">{t('NFT Rewards')}</p>
                 <p className="text-3xl font-bold text-yellow-400">{totalRewards}</p>
               </div>
             </div>
 
             {/* Game Records */}
             <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-              <h2 className="text-2xl font-bold text-white mb-4">Recent Games</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">{t('Recent Games')}</h2>
 
               {gameRecords.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-400 text-lg mb-4">No games played yet</p>
+                  <p className="text-gray-400 text-lg mb-4">{t('No games played yet')}</p>
                   <Link
                     href="/"
                     className="inline-block bg-blue-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-600"
                   >
-                    Play Your First Game
+                    {t('Play Your First Game')}
                   </Link>
                 </div>
               ) : (
@@ -325,10 +327,10 @@ export default function HistoryPage() {
                           <div>
                             <p className="text-white font-bold">
                               {record.sessionId.startsWith('challenge-')
-                                ? (record.wavesCleared > 0 ? 'Challenge Won!' : 'Challenge Lost')
-                                : (record.wavesCleared >= 5 ? 'Victory!' : `${record.wavesCleared} Waves Cleared`)
+                                ? (record.wavesCleared > 0 ? t('Challenge Won!') : t('Challenge Lost'))
+                                : (record.wavesCleared >= 5 ? t('Victory!') : `${record.wavesCleared} ${t('Waves Cleared')}`)
                               }
-                              {isTestMode && <span className="ml-2 text-xs text-gray-500">(Test)</span>}
+                              {isTestMode && <span className="ml-2 text-xs text-gray-500">{t('(Test)')}</span>}
                             </p>
                             <p className="text-gray-400 text-sm">
                               {new Date(record.timestamp).toLocaleString()}
@@ -340,17 +342,17 @@ export default function HistoryPage() {
                           {record.sessionId.startsWith('challenge-') ? (
                             <>
                               <p className={`font-bold text-lg ${record.reward > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {record.reward > 0 ? `+${record.reward.toFixed(3)} OCT` : 'Lost'}
+                                {record.reward > 0 ? `+${record.reward.toFixed(3)} ${t('currency')}` : t('Lost')}
                               </p>
-                              <p className="text-gray-400 text-sm">Challenge</p>
+                              <p className="text-gray-400 text-sm">{t('Challenge')}</p>
                             </>
                           ) : (
                             <>
                               <p className={`font-bold text-lg ${record.reward > 0 ? 'text-yellow-400' : 'text-gray-500'}`}>
-                                {record.reward > 0 ? '🎁 NFT Tower' : 'No Drop'}
+                                {record.reward > 0 ? t('NFT Tower') : t('No Drop')}
                               </p>
                               <p className="text-gray-400 text-sm">
-                                {record.wavesCleared >= 5 ? '80%' : record.wavesCleared >= 4 ? '50%' : record.wavesCleared >= 3 ? '30%' : record.wavesCleared >= 2 ? '20%' : '0%'} chance
+                                {record.wavesCleared >= 5 ? '80%' : record.wavesCleared >= 4 ? '50%' : record.wavesCleared >= 3 ? '30%' : record.wavesCleared >= 2 ? '20%' : '0%'} {t('chance')}
                               </p>
                             </>
                           )}
@@ -364,23 +366,23 @@ export default function HistoryPage() {
 
             {/* Reward Table */}
             <div className="mt-8 bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-              <h2 className="text-2xl font-bold text-white mb-4">🎁 NFT Drop Rates</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">{t('NFT Drop Rates')}</h2>
               <div className="space-y-2">
                 <div className="flex justify-between items-center bg-gray-900 rounded-lg p-3">
-                  <span className="text-gray-300">Clear 2 Waves</span>
-                  <span className="text-gray-400 font-bold">20% NFT Drop</span>
+                  <span className="text-gray-300">{t('Clear 2 Waves')}</span>
+                  <span className="text-gray-400 font-bold">{t('20% NFT Drop')}</span>
                 </div>
                 <div className="flex justify-between items-center bg-gray-900 rounded-lg p-3">
-                  <span className="text-gray-300">Clear 3 Waves</span>
-                  <span className="text-green-400 font-bold">30% NFT Drop</span>
+                  <span className="text-gray-300">{t('Clear 3 Waves')}</span>
+                  <span className="text-green-400 font-bold">{t('30% NFT Drop')}</span>
                 </div>
                 <div className="flex justify-between items-center bg-gray-900 rounded-lg p-3">
-                  <span className="text-gray-300">Clear 4 Waves</span>
-                  <span className="text-blue-400 font-bold">50% NFT Drop</span>
+                  <span className="text-gray-300">{t('Clear 4 Waves')}</span>
+                  <span className="text-blue-400 font-bold">{t('50% NFT Drop')}</span>
                 </div>
                 <div className="flex justify-between items-center bg-gray-900 rounded-lg p-3">
-                  <span className="text-gray-300">Clear 5 Waves</span>
-                  <span className="text-yellow-400 font-bold">80% NFT Drop (Epic+)</span>
+                  <span className="text-gray-300">{t('Clear 5 Waves')}</span>
+                  <span className="text-yellow-400 font-bold">{t('80% NFT Drop (Epic+)')}</span>
                 </div>
               </div>
             </div>
@@ -392,38 +394,38 @@ export default function HistoryPage() {
                 {/* Market Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                   <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                    <p className="text-gray-400 text-sm mb-1">Total Sales</p>
+                    <p className="text-gray-400 text-sm mb-1">{t('Total Sales')}</p>
                     <p className="text-3xl font-bold text-green-400">{totalSales}</p>
                   </div>
 
                   <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                    <p className="text-gray-400 text-sm mb-1">Total Purchases</p>
+                    <p className="text-gray-400 text-sm mb-1">{t('Total Purchases')}</p>
                     <p className="text-3xl font-bold text-blue-400">{totalPurchases}</p>
                   </div>
 
                   <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                    <p className="text-gray-400 text-sm mb-1">Earned</p>
-                    <p className="text-3xl font-bold text-yellow-400">{totalEarned.toFixed(3)} OCT</p>
+                    <p className="text-gray-400 text-sm mb-1">{t('Earned')}</p>
+                    <p className="text-3xl font-bold text-yellow-400">{totalEarned.toFixed(3)} {t('currency')}</p>
                   </div>
 
                   <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                    <p className="text-gray-400 text-sm mb-1">Spent</p>
-                    <p className="text-3xl font-bold text-purple-400">{totalSpent.toFixed(3)} OCT</p>
+                    <p className="text-gray-400 text-sm mb-1">{t('Spent')}</p>
+                    <p className="text-3xl font-bold text-purple-400">{totalSpent.toFixed(3)} {t('currency')}</p>
                   </div>
                 </div>
 
                 {/* Market Transactions */}
                 <div className="bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                  <h2 className="text-2xl font-bold text-white mb-4">Recent Transactions</h2>
+                  <h2 className="text-2xl font-bold text-white mb-4">{t('Recent Transactions')}</h2>
 
                   {marketTransactions.length === 0 ? (
                     <div className="text-center py-12">
-                      <p className="text-gray-400 text-lg mb-4">No marketplace activity yet</p>
+                      <p className="text-gray-400 text-lg mb-4">{t('No marketplace activity yet')}</p>
                       <Link
                         href="/market"
                         className="inline-block bg-purple-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-600"
                       >
-                        Visit Marketplace
+                        {t('Visit Marketplace')}
                       </Link>
                     </div>
                   ) : (
@@ -448,22 +450,22 @@ export default function HistoryPage() {
 
                             <div>
                               <p className="text-white font-bold">
-                                {tx.type === 'sold' && 'Tower Sold'}
-                                {tx.type === 'bought' && 'Tower Purchased'}
-                                {tx.type === 'listed' && 'Tower Listed'}
-                                {tx.type === 'cancelled' && 'Listing Cancelled'}
+                                {tx.type === 'sold' && t('Tower Sold')}
+                                {tx.type === 'bought' && t('Tower Purchased')}
+                                {tx.type === 'listed' && t('Tower Listed')}
+                                {tx.type === 'cancelled' && t('Listing Cancelled')}
                               </p>
                               <p className="text-gray-400 text-sm">
                                 {new Date(tx.timestamp).toLocaleString()}
                               </p>
                               {tx.buyer && tx.type === 'bought' && (
                                 <p className="text-gray-500 text-xs">
-                                  From: {tx.seller?.slice(0, 6)}...{tx.seller?.slice(-4)}
+                                  {t('From:')} {tx.seller?.slice(0, 6)}...{tx.seller?.slice(-4)}
                                 </p>
                               )}
                               {tx.buyer && tx.type === 'sold' && (
                                 <p className="text-gray-500 text-xs">
-                                  To: {tx.buyer.slice(0, 6)}...{tx.buyer.slice(-4)}
+                                  {t('To:')} {tx.buyer.slice(0, 6)}...{tx.buyer.slice(-4)}
                                 </p>
                               )}
                             </div>
@@ -477,17 +479,17 @@ export default function HistoryPage() {
                                   tx.type === 'bought' ? 'text-red-400' : 
                                   'text-yellow-400'
                                 }`}>
-                                  {tx.type === 'sold' && `+${tx.price.toFixed(3)} OCT`}
-                                  {tx.type === 'bought' && `-${tx.price.toFixed(3)} OCT`}
-                                  {tx.type === 'listed' && `${tx.price.toFixed(3)} OCT`}
+                                  {tx.type === 'sold' && `+${tx.price.toFixed(3)} ${t('currency')}`}
+                                  {tx.type === 'bought' && `-${tx.price.toFixed(3)} ${t('currency')}`}
+                                  {tx.type === 'listed' && `${tx.price.toFixed(3)} ${t('currency')}`}
                                 </p>
                                 <p className="text-gray-400 text-sm">
-                                  {tx.type === 'listed' ? 'Listed Price' : 'Sale Price'}
+                                  {tx.type === 'listed' ? t('Listed Price') : t('Sale Price')}
                                 </p>
                               </>
                             )}
                             {tx.type === 'cancelled' && (
-                              <p className="text-gray-500 font-bold">Cancelled</p>
+                              <p className="text-gray-500 font-bold">{t('Cancelled')}</p>
                             )}
                           </div>
                         </div>
@@ -499,23 +501,23 @@ export default function HistoryPage() {
                 {/* Net Profit */}
                 {marketTransactions.length > 0 && (
                   <div className="mt-8 bg-gray-800 rounded-xl p-6 border-2 border-gray-700">
-                    <h2 className="text-2xl font-bold text-white mb-4">💎 Trading Summary</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4">{t('Trading Summary')}</h2>
                     <div className="bg-gray-900 rounded-lg p-6">
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-300 text-lg">Total Earned:</span>
-                        <span className="text-green-400 font-bold text-xl">+{totalEarned.toFixed(3)} OCT</span>
+                        <span className="text-gray-300 text-lg">{t('Total Earned:')}</span>
+                        <span className="text-green-400 font-bold text-xl">+{totalEarned.toFixed(3)} {t('currency')}</span>
                       </div>
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-300 text-lg">Total Spent:</span>
-                        <span className="text-red-400 font-bold text-xl">-{totalSpent.toFixed(3)} OCT</span>
+                        <span className="text-gray-300 text-lg">{t('Total Spent:')}</span>
+                        <span className="text-red-400 font-bold text-xl">-{totalSpent.toFixed(3)} {t('currency')}</span>
                       </div>
                       <div className="border-t border-gray-700 pt-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-white font-bold text-xl">Net Profit:</span>
+                          <span className="text-white font-bold text-xl">{t('Net Profit:')}</span>
                           <span className={`font-bold text-2xl ${
                             totalEarned - totalSpent >= 0 ? 'text-green-400' : 'text-red-400'
                           }`}>
-                            {totalEarned - totalSpent >= 0 ? '+' : ''}{(totalEarned - totalSpent).toFixed(3)} OCT
+                            {totalEarned - totalSpent >= 0 ? '+' : ''}{(totalEarned - totalSpent).toFixed(3)} {t('currency')}
                           </span>
                         </div>
                       </div>

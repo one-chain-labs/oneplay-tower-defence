@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useCurrentAccount, useSuiClientQuery } from '@onelabs/dapp-kit';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
+import { useI18n } from '../providers';
 
 interface TowerNFT {
   id: string;
@@ -28,6 +29,7 @@ const TYPE_NAMES = ['', 'Normal', 'Fast', 'Tank'];
 const TYPE_EMOJI = ['', '👹', '⚡', '🛡️'];
 
 export default function MyTowersPage() {
+  const { t } = useI18n();
   const account = useCurrentAccount();
   const [viewType, setViewType] = useState<'tower' | 'monster'>('tower');
   const [myTowers, setMyTowers] = useState<TowerNFT[]>([]);
@@ -125,14 +127,14 @@ export default function MyTowersPage() {
         <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
           <div className="mb-6">
             <Link href="/town" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg">
-              ← Back to Town
+              {t('Back to Town')}
             </Link>
           </div>
 
         <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl p-6 border-2 border-blue-400 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-              🎒 My Collection
+              {t('My Collection')}
             </h1>
             
             {/* Toggle Switch */}
@@ -145,7 +147,7 @@ export default function MyTowersPage() {
                     : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
                 }`}
               >
-                🗼 Towers
+                {t('Towers')}
               </button>
               <button
                 onClick={() => setViewType('monster')}
@@ -155,27 +157,27 @@ export default function MyTowersPage() {
                     : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
                 }`}
               >
-                👹 Monsters
+                {t('Monsters')}
               </button>
             </div>
           </div>
 
           {!account ? (
             <div className="text-center py-12">
-              <p className="text-cyan-200 text-lg">Please connect your wallet to view your collection</p>
+              <p className="text-cyan-200 text-lg">{t('Please connect your wallet to view your collection')}</p>
             </div>
           ) : viewType === 'tower' ? (
             myTowers.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-cyan-200 text-lg mb-4">You don't have any towers yet</p>
+                <p className="text-cyan-200 text-lg mb-4">{t('You don\'t have any towers yet')}</p>
                 <Link href="/lucky-draw" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform inline-block">
-                  🎁 Mint Your First Tower
+                  {t('Mint Your First Tower')}
                 </Link>
               </div>
             ) : (
               <>
                 <div className="mb-6">
-                  <p className="text-cyan-200 text-lg">Total Towers: <span className="font-bold text-white">{myTowers.length}</span></p>
+                  <p className="text-cyan-200 text-lg">{t('Total Towers:')} <span className="font-bold text-white">{myTowers.length}</span></p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -186,26 +188,26 @@ export default function MyTowersPage() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className={`font-bold ${RARITY_COLORS[tower.rarity]}`}>
-                        {RARITY_NAMES[tower.rarity]}
+                        {t(RARITY_NAMES[tower.rarity])}
                       </span>
                       <div className={`w-3 h-3 rounded-full ${RARITY_BG[tower.rarity]}`} />
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">⚔️ Damage:</span>
+                        <span className="text-gray-400">{t('Damage:')}</span>
                         <span className="text-white font-bold">{tower.damage}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">🎯 Range:</span>
+                        <span className="text-gray-400">{t('Range:')}</span>
                         <span className="text-white font-bold">{tower.range}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">⚡ Fire Rate:</span>
+                        <span className="text-gray-400">{t('Fire Rate:')}</span>
                         <span className="text-white font-bold">{tower.fireRate}ms</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-gray-700">
-                        <span className="text-gray-500 text-xs">ID: {tower.id.slice(0, 8)}...{tower.id.slice(-6)}</span>
+                        <span className="text-gray-500 text-xs">{t('ID:')} {tower.id.slice(0, 8)}...{tower.id.slice(-6)}</span>
                       </div>
                     </div>
                   </div>
@@ -216,15 +218,15 @@ export default function MyTowersPage() {
           ) : (
             myMonsters.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-cyan-200 text-lg mb-4">You don't have any monsters yet</p>
+                <p className="text-cyan-200 text-lg mb-4">{t('You don\'t have any monsters yet')}</p>
                 <Link href="/monster-draw" className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform inline-block">
-                  🎃 Mint Your First Monster
+                  {t('Mint Your First Monster')}
                 </Link>
               </div>
             ) : (
               <>
                 <div className="mb-6">
-                  <p className="text-cyan-200 text-lg">Total Monsters: <span className="font-bold text-white">{myMonsters.length}</span></p>
+                  <p className="text-cyan-200 text-lg">{t('Total Monsters:')} <span className="font-bold text-white">{myMonsters.length}</span></p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -237,7 +239,7 @@ export default function MyTowersPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-3xl">{TYPE_EMOJI[monster.monsterType]}</span>
                           <span className={`font-bold ${RARITY_COLORS[monster.rarity]}`}>
-                            {RARITY_NAMES[monster.rarity]}
+                            {t(RARITY_NAMES[monster.rarity])}
                           </span>
                         </div>
                         <div className={`w-3 h-3 rounded-full ${RARITY_BG[monster.rarity]}`} />
@@ -245,19 +247,19 @@ export default function MyTowersPage() {
 
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Type:</span>
-                          <span className="text-white font-bold">{TYPE_NAMES[monster.monsterType]}</span>
+                          <span className="text-gray-400">{t('Type:')}</span>
+                          <span className="text-white font-bold">{t(TYPE_NAMES[monster.monsterType])}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">❤️ HP:</span>
+                          <span className="text-gray-400">{t('HP:')}</span>
                           <span className="text-white font-bold">{monster.hp}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">⚡ Speed:</span>
+                          <span className="text-gray-400">{t('Speed:')}</span>
                           <span className="text-white font-bold">{monster.speed}</span>
                         </div>
                         <div className="mt-2 pt-2 border-t border-gray-700">
-                          <span className="text-gray-500 text-xs">ID: {monster.id.slice(0, 8)}...{monster.id.slice(-6)}</span>
+                          <span className="text-gray-500 text-xs">{t('ID:')} {monster.id.slice(0, 8)}...{monster.id.slice(-6)}</span>
                         </div>
                       </div>
                     </div>

@@ -6,6 +6,7 @@ import { Transaction } from '@onelabs/sui/transactions';
 import { mintMonster } from '@/lib/contracts';
 import { MINT_COST, PACKAGE_ID, GAME_STATE_ID } from '@/lib/constants';
 import Link from 'next/link';
+import { useI18n } from '../providers';
 
 interface MonsterNFT {
   id: string;
@@ -21,6 +22,7 @@ const TYPE_NAMES = ['', 'Normal', 'Fast', 'Tank'];
 const TYPE_EMOJI = ['', '👹', '⚡', '🛡️'];
 
 export default function MonsterDrawPage() {
+  const { t } = useI18n();
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
 
@@ -89,27 +91,27 @@ export default function MonsterDrawPage() {
         const newMonster = monsters[0];
         console.log('New monster detected:', newMonster);
         setMintedMonster(newMonster);
-        setMessage('🎉 Monster NFT minted!');
+        setMessage(t('🎉 Monster NFT minted!'));
       }
 
       setMyMonsters(monsters);
     }
-  }, [ownedMonsters, showMintCard]);
+  }, [ownedMonsters, showMintCard, mintedMonster, t]);
 
   const handleMint = () => {
     if (!account) {
-      setMessage('Please connect wallet first');
+      setMessage(t('Please connect wallet first'));
       return;
     }
 
     if (gameBalance < MINT_COST) {
-      setMessage('❌ Not enough GAME tokens!');
+      setMessage(t('❌ Not enough GAME tokens!'));
       return;
     }
 
     const gameCoin = gameCoins?.data[0];
     if (!gameCoin) {
-      setMessage('❌ No GAME tokens found!');
+      setMessage(t('❌ No GAME tokens found!'));
       return;
     }
 
@@ -117,7 +119,7 @@ export default function MonsterDrawPage() {
     setLoading(true);
     setShowMintCard(true);
     setMintedMonster(null);
-    setMessage('🎰 Minting monster...');
+    setMessage(t('🎰 Minting monster...'));
     
     const tx = new Transaction();
     mintMonster(tx, gameCoin.coinObjectId, MINT_COST);
@@ -128,13 +130,13 @@ export default function MonsterDrawPage() {
         onSuccess: () => {
           console.log('Monster minted successfully');
           setLoading(false);
-          setMessage('🎰 Opening mystery box...');
+          setMessage(t('🎰 Opening mystery box...'));
           refetchMonsters();
           refetchGameBalance();
         },
         onError: (error: any) => {
           console.error('Error:', error);
-          setMessage(`Error: ${error.message}`);
+          setMessage(`${t('Error: ')}${error.message}`);
           setLoading(false);
           setShowMintCard(false);
         },
@@ -148,37 +150,37 @@ export default function MonsterDrawPage() {
         <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
           <div className="mb-6 flex items-center gap-4">
             <Link href="/town" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg">
-              ← Back to Town
+             {t('Back to Town')}
             </Link>
           <Link href="/lucky-draw" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-xl font-bold hover:scale-105 transition-transform">
-            🗼 Tower Draw
+             {t('Tower Draw')}
           </Link>
           <Link href="/my-towers" className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-2 rounded-xl font-bold hover:scale-105 transition-transform">
-            🎒 My Bag
+            {t('My Bag')}
           </Link>
         </div>
 
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-yellow-200 mb-4" style={{textShadow: '3px 3px 6px rgba(0,0,0,0.5)'}}>
-            🎃 Monster Lucky Draw
+            {t('Monster Lucky Draw')}
           </h1>
-          <p className="text-orange-200 text-lg">Open mystery boxes to get random monster NFTs!</p>
+          <p className="text-orange-200 text-lg">{t('Open mystery boxes to get random monster NFTs!')}</p>
         </div>
 
         {!account ? (
           <div className="bg-gradient-to-b from-red-600 to-red-800 border-4 border-red-900 rounded-2xl p-6 text-center shadow-2xl">
-            <p className="text-yellow-100 text-lg font-bold">🔐 Connect your wallet to start!</p>
+            <p className="text-yellow-100 text-lg font-bold">{t('Connect your wallet to start!')}</p>
           </div>
         ) : (
           <>
             <div className="bg-gradient-to-b from-amber-600 to-amber-800 rounded-2xl p-4 mb-6 border-4 border-amber-950 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-200 text-sm font-bold">💰 GAME Balance</p>
+                  <p className="text-yellow-200 text-sm font-bold">{t('GAME Balance')}</p>
                   <p className="text-yellow-50 text-2xl font-bold">{gameBalanceFormatted.toFixed(2)} GAME</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-yellow-200 text-sm font-bold">👹 My Monsters</p>
+                  <p className="text-yellow-200 text-sm font-bold">{t('My Monsters')}</p>
                   <p className="text-yellow-50 text-2xl font-bold">{myMonsters.length}</p>
                 </div>
               </div>
@@ -186,7 +188,7 @@ export default function MonsterDrawPage() {
 
             {message && (
               <div className="bg-gradient-to-b from-blue-600 to-blue-800 border-4 border-blue-900 rounded-2xl p-4 mb-6 shadow-2xl">
-                <p className="text-yellow-100 font-bold text-center">{message}</p>
+                <p className="text-yellow-100 font-bold text-center">{t(message)}</p>
               </div>
             )}
 
@@ -203,20 +205,20 @@ export default function MonsterDrawPage() {
                   <div className="mb-6">
                     <img 
                       src="/mst.png"
-                      alt="Mystery Box" 
+                      alt={t('Mystery Box')} 
                       className="w-80 h-80 mx-auto drop-shadow-2xl"
                     />
                   </div>
                   
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border-2 border-white/20 mb-6">
                     <h2 className="text-2xl font-bold text-yellow-200 mb-3 drop-shadow-lg">
-                      Monster Mystery Box
+                      {t('Monster Mystery Box')}
                     </h2>
                     <p className="text-white mb-2 drop-shadow-lg text-lg">
-                      Get a random monster with unique abilities!
+                      {t('Get a random monster with unique abilities!')}
                     </p>
                     <p className="text-yellow-300 font-bold text-xl">
-                      Cost: {MINT_COST / 1_000_000_000} GAME
+                      {t('Cost:')} {MINT_COST / 1_000_000_000} GAME
                     </p>
                   </div>
 
@@ -225,19 +227,19 @@ export default function MonsterDrawPage() {
                     disabled={!account || loading}
                     className="w-full bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white px-8 py-6 rounded-xl font-bold text-2xl hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/50"
                   >
-                    {loading ? '✨ Minting...' : `🎃 Open Mystery Box (${MINT_COST / 1_000_000_000} GAME)`}
+                    {loading ? t('✨ Minting...') : t('Open Mystery Box ({MINT_COST} GAME)').replace('{MINT_COST}', (MINT_COST / 1_000_000_000).toString())}
                   </button>
                 </div>
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6 border-2 border-red-400">
-              <h3 className="text-2xl font-bold text-red-300 mb-4">💡 How It Works</h3>
+              <h3 className="text-2xl font-bold text-red-300 mb-4">{t('How It Works')}</h3>
               <div className="space-y-3 text-orange-100">
-                <p>• Pay {MINT_COST / 1_000_000_000} GAME to open a mystery box</p>
-                <p>• Get a random monster NFT with unique abilities</p>
-                <p>• Higher rarity = stronger monster</p>
-                <p>• Use monsters to create challenges</p>
+                <p>{t('Pay {MINT_COST} GAME to open a mystery box').replace('{MINT_COST}', (MINT_COST / 1_000_000_000).toString())}</p>
+                <p>{t('Get a random monster NFT with unique abilities')}</p>
+                <p>{t('Higher rarity = stronger monster')}</p>
+                <p>{t('Use monsters to create challenges')}</p>
               </div>
             </div>
           </>
@@ -249,7 +251,7 @@ export default function MonsterDrawPage() {
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gradient-to-br from-red-600 via-orange-600 to-yellow-600 rounded-3xl p-8 border-4 border-yellow-400 max-w-md w-full mx-4 shadow-2xl shadow-red-500/50">
             <h2 className="text-3xl font-bold text-white text-center mb-6 drop-shadow-lg">
-              🎃 Monster Box 🎃
+              {t('Monster Box 🎃')}
             </h2>
             
             {!mintedMonster ? (
@@ -257,11 +259,11 @@ export default function MonsterDrawPage() {
                 <div className="w-48 h-48 mx-auto mb-4 animate-bounce">
                   <img 
                     src="/mst.png" 
-                    alt="Opening..." 
+                    alt={t('Opening...')}
                     className="w-full h-full drop-shadow-2xl"
                   />
                 </div>
-                <p className="text-white text-xl font-bold drop-shadow-lg">Opening box...</p>
+                <p className="text-white text-xl font-bold drop-shadow-lg">{t('Opening box...')}</p>
               </div>
             ) : (
               <div className="text-center">
@@ -269,23 +271,23 @@ export default function MonsterDrawPage() {
                   <span className="text-6xl">{TYPE_EMOJI[mintedMonster.monsterType]}</span>
                 </div>
                 <p className={`text-3xl font-bold mb-2 drop-shadow-lg ${RARITY_COLORS[mintedMonster.rarity]}`}>
-                  {RARITY_NAMES[mintedMonster.rarity]}
+                  {t(RARITY_NAMES[mintedMonster.rarity])}
                 </p>
-                <p className="text-white text-xl mb-4 drop-shadow-lg">{TYPE_NAMES[mintedMonster.monsterType]} Monster!</p>
+                <p className="text-white text-xl mb-4 drop-shadow-lg">{t(TYPE_NAMES[mintedMonster.monsterType])}{t(' Monster!')}</p>
                 
                 <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 mb-4 border-2 border-white/20">
                   <div className="space-y-2 text-left">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">❤️ HP:</span>
+                      <span className="text-gray-400">{t('HP:')}</span>
                       <span className="text-white font-bold">{mintedMonster.hp}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">⚡ Speed:</span>
+                      <span className="text-gray-400">{t('Speed:')}</span>
                       <span className="text-white font-bold">{mintedMonster.speed}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Type:</span>
-                      <span className="text-white font-bold">{TYPE_NAMES[mintedMonster.monsterType]}</span>
+                      <span className="text-gray-400">{t('Type:')}</span>
+                      <span className="text-white font-bold">{t(TYPE_NAMES[mintedMonster.monsterType])}</span>
                     </div>
                   </div>
                 </div>
@@ -299,7 +301,7 @@ export default function MonsterDrawPage() {
                   }}
                   className="bg-gradient-to-r from-cyan-400 to-blue-400 text-gray-900 px-8 py-3 rounded-xl font-bold hover:scale-110 transition-transform shadow-lg"
                 >
-                  🎉 Awesome!
+                  {t('Awesome!')}
                 </button>
               </div>
             )}

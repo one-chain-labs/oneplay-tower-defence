@@ -5,7 +5,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } fr
 import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
-import {networks} from '../providers';
+import {networks, useI18n} from '../providers';
 
 interface Listing {
   id: string;
@@ -27,7 +27,7 @@ const NETWORK_RPC_URL = networks[NETWORK_RPC].url;
 export default function MarketplacePage() {
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
-
+  const { t } = useI18n();
   const [listings, setListings] = useState<Listing[]>([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -329,7 +329,7 @@ export default function MarketplacePage() {
 
                       {listing.seller === account.address ? (
                         <div className="bg-gray-700 text-gray-400 px-4 py-3 rounded-xl text-center">
-                          Your Listing
+                          {t('Your Listing')}
                         </div>
                       ) : (
                         <button
@@ -337,7 +337,7 @@ export default function MarketplacePage() {
                           disabled={loading}
                           className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:from-green-600 hover:to-blue-600 disabled:opacity-50"
                         >
-                          {loading ? 'Buying...' : 'Buy Now'}
+                          {loading ? t('Buying...') : t('Buy Now')}
                         </button>
                       )}
                     </div>

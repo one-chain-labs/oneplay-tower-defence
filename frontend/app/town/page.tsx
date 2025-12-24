@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function TownPage() {
+  const { t } = useTranslation();
   const [hoveredBuilding, setHoveredBuilding] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -13,9 +15,8 @@ export default function TownPage() {
 
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden">
-      
       {/* Background Image */}
-      <div 
+      <div
         className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(/background.png)',
@@ -24,7 +25,7 @@ export default function TownPage() {
 
       {/* Tooltip following mouse */}
       {hoveredBuilding && (
-        <div 
+        <div
           className="fixed z-50 pointer-events-none"
           style={{
             left: mousePos.x + 20,
@@ -32,103 +33,101 @@ export default function TownPage() {
           }}
         >
           <div className="bg-gray-900/95 backdrop-blur-sm border-2 border-gray-950 rounded-xl px-6 py-2 shadow-2xl">
-            <p className="text-yellow-100 font-bold text-base whitespace-nowrap">{hoveredBuilding}</p>
+            <p className="text-yellow-100 font-bold text-base whitespace-nowrap">
+              {hoveredBuilding}
+            </p>
           </div>
         </div>
       )}
 
       {/* Town Map */}
-      <div 
+      <div
         className="relative w-full h-full px-20 py-8 flex items-center justify-center"
         onMouseMove={handleMouseMove}
       >
-        
         {/* Center Top - Game Arena (large) */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="absolute top-[22%] left-1/2 transform -translate-x-1/2 cursor-pointer hover:scale-105 transition-all duration-300 z-30"
-          onMouseEnter={() => setHoveredBuilding('🎮 Game Arena')}
+          onMouseEnter={() => setHoveredBuilding(t('town.gameArena'))}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
-          <img 
-            src="/game.png" 
-            alt="Game Arena" 
+          <img
+            src="/game.png"
+            alt="Game Arena"
             className="w-96 h-auto drop-shadow-2xl"
           />
         </Link>
 
         {/* Top Left - Lucky Draw */}
-        <Link 
-          href="/lucky-draw" 
+        <Link
+          href="/lucky-draw"
           className="absolute top-[18%] left-[20%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
-          onMouseEnter={() => setHoveredBuilding('🎁 Lucky Draw')}
+          onMouseEnter={() => setHoveredBuilding(t('town.luckyDraw'))}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
-          <img 
-            src="/luckydraw.png" 
-            alt="Lucky Draw" 
+          <img
+            src="/luckydraw.png"
+            alt="Lucky Draw"
             className="w-60 h-auto drop-shadow-2xl"
           />
         </Link>
 
         {/* Top Right - Challenge Hall */}
-        <Link 
-          href="/challenge-list" 
+        <Link
+          href="/challenge-list"
           className="absolute top-[18%] right-[20%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
-          onMouseEnter={() => setHoveredBuilding('⚔️ Challenge Hall')}
+          onMouseEnter={() => setHoveredBuilding(t('town.challengeHall'))}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
-          <img 
-            src="/challenge.png" 
-            alt="Challenge Hall" 
+          <img
+            src="/challenge.png"
+            alt="Challenge Hall"
             className="w-60 h-auto drop-shadow-2xl"
           />
         </Link>
 
         {/* Bottom Left - Tower Bag */}
-        <Link 
-          href="/my-towers" 
+        <Link
+          href="/my-towers"
           className="absolute bottom-[22%] left-[24%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
-          onMouseEnter={() => setHoveredBuilding('🎒 My Towers')}
+          onMouseEnter={() => setHoveredBuilding(t('town.myTowers'))}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
-          <img 
-            src="/tower.png" 
-            alt="Tower Bag" 
+          <img
+            src="/tower.png"
+            alt="Tower Bag"
             className="w-56 h-auto drop-shadow-2xl"
           />
         </Link>
 
         {/* Right Middle - Marketplace */}
-        <Link 
-          href="/market" 
+        <Link
+          href="/market"
           className="absolute top-[42%] right-[20%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
-          onMouseEnter={() => setHoveredBuilding('🏪 Marketplace')}
+          onMouseEnter={() => setHoveredBuilding(t('town.marketplace'))}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
-          <img 
-            src="/marketplace.png" 
-            alt="Marketplace" 
+          <img
+            src="/marketplace.png"
+            alt="Marketplace"
             className="w-60 h-auto drop-shadow-2xl"
           />
         </Link>
 
         {/* Bottom Right - History Board (small notice board) */}
-        <Link 
-          href="/history" 
+        <Link
+          href="/history"
           className="absolute bottom-[12%] right-[32%] cursor-pointer hover:scale-105 transition-all duration-300 z-20"
-          onMouseEnter={() => setHoveredBuilding('📋 History Board')}
+          onMouseEnter={() => setHoveredBuilding(t('town.historyBoard'))}
           onMouseLeave={() => setHoveredBuilding(null)}
         >
-          <img 
-            src="/history.png" 
-            alt="History Board" 
+          <img
+            src="/history.png"
+            alt="History Board"
             className="w-44 h-auto drop-shadow-2xl"
           />
         </Link>
-
-
-
       </div>
     </div>
   );

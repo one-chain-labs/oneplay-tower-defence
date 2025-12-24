@@ -7,6 +7,7 @@ import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID } from '@/lib/constants';
 import { drawTower, drawEnemy } from '@/lib/gameRenderer';
 import Link from 'next/link';
+import { useI18n } from '../providers';
 
 interface Tower {
   id: string;
@@ -71,6 +72,7 @@ const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
 
 function PlayChallengeContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const challengeId = searchParams.get('id');
   const monsterHp = Number(searchParams.get('hp')) || 50;
@@ -86,7 +88,7 @@ function PlayChallengeContent() {
   const [myTowers, setMyTowers] = useState<TowerNFT[]>([]);
   const [selectedTowerForPlacement, setSelectedTowerForPlacement] = useState<TowerNFT | null>(null);
   const [placedTowers, setPlacedTowers] = useState<TowerNFT[]>([]);
-  const [message, setMessage] = useState('Click a tower from your list to place it on the map!');
+  const [message, setMessage] = useState(t('Click a tower from your list to place it on the map!'));
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(true);
@@ -119,14 +121,14 @@ function PlayChallengeContent() {
       const state = gameStateRef.current;
       if (!state.gameOver && !state.victory) {
         e.preventDefault();
-        e.returnValue = 'Leaving will forfeit your entry fee. Are you sure?';
+        e.returnValue = t('Warning: Leaving now will forfeit your entry fee and count as a loss. Are you sure?');
         return e.returnValue;
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
+  }, [t]);
 
   // Toggle music
   const toggleMusic = () => {
@@ -197,15 +199,15 @@ function PlayChallengeContent() {
   // Select tower for placement
   const handleSelectTowerForPlacement = (tower: TowerNFT) => {
     if (placedTowers.some(t => t.id === tower.id)) {
-      setMessage('❌ This tower has already been placed!');
+      setMessage(t('This tower has already been placed!'));
       return;
     }
     if (placedTowers.length >= 5) {
-      setMessage('❌ Maximum 5 towers! Start the challenge now.');
+      setMessage(t('Maximum 5 towers! Start the challenge now.'));
       return;
     }
     setSelectedTowerForPlacement(tower);
-    setMessage(`✅ ${RARITY_NAMES[tower.rarity]} tower selected! Click on the map to place it.`);
+    setMessage(t('{rarity} tower selected! Click on the map to place it.').replace('{rarity}', t(RARITY_NAMES[tower.rarity])));
   };
 
   const startSpawning = () => {
@@ -235,11 +237,11 @@ function PlayChallengeContent() {
 
   const handleStartWave = () => {
     if (gameStateRef.current.towers.length === 0) {
-      setMessage('Place at least one tower before starting!');
+      setMessage(t('Place at least one tower before starting!'));
       return;
     }
     gameStateRef.current.isWaveActive = true;
-    setMessage('Challenge started! Defend against the monsters!');
+    setMessage(t('Challenge started! Defend against the monsters!'));
     forceUpdate(v => v + 1);
     startSpawning();
   };
@@ -248,17 +250,17 @@ function PlayChallengeContent() {
     const state = gameStateRef.current;
     
     if (state.isWaveActive) {
-      setMessage('❌ Cannot place towers during wave!');
+      setMessage(t('Cannot place towers during wave!'));
       return;
     }
     
     if (!selectedTowerForPlacement) {
-      setMessage('❌ Please select a tower from your list first!');
+      setMessage(t('Please select a tower from your list first!'));
       return;
     }
 
     if (placedTowers.length >= 5) {
-      setMessage('❌ Maximum 5 towers reached!');
+      setMessage(t('Maximum 5 towers reached!'));
       return;
     }
 
@@ -311,7 +313,7 @@ function PlayChallengeContent() {
     };
 
     if (isOnPath()) {
-      setMessage('❌ Cannot build on the path!');
+      setMessage(t('Cannot build on the path!'));
       return;
     }
 
@@ -320,7 +322,7 @@ function PlayChallengeContent() {
       (t) => Math.hypot(t.x - x, t.y - y) < 40
     );
     if (tooClose) {
-      setMessage('❌ Too close to another tower!');
+      setMessage(t('Too close to another tower!'));
       return;
     }
 
@@ -341,9 +343,9 @@ function PlayChallengeContent() {
     
     const remaining = 5 - placedTowers.length - 1;
     if (remaining > 0) {
-      setMessage(`✅ Tower placed! (${placedTowers.length + 1}/5) - Select another tower or start challenge.`);
+      setMessage(t('Tower placed! ({count}/5) - Select another tower or start challenge.').replace('{count}', (placedTowers.length + 1).toString()));
     } else {
-      setMessage(`✅ All 5 towers placed! Click "Start Challenge" to begin.`);
+      setMessage(t('All 5 towers placed! Click "Start Challenge" to begin.'));
     }
     forceUpdate(v => v + 1);
   };
@@ -404,7 +406,7 @@ function PlayChallengeContent() {
               state.lives--;
               if (state.lives <= 0) {
                 state.gameOver = true;
-                setMessage('💀 Game Over! Monster reached the end!');
+                setMessage(t('Game Over! Monster reached the end!'));
               }
               return false;
             }
@@ -661,7 +663,7 @@ function PlayChallengeContent() {
       if (state.lives <= 0 && !state.gameOver) {
         state.gameOver = true;
         state.isWaveActive = false;
-        setMessage('💀 Game Over! Monster reached the end!');
+        setMessage(t('Game Over! Monster reached the end!'));
         forceUpdate(v => v + 1);
       }
 
@@ -669,7 +671,7 @@ function PlayChallengeContent() {
       if (state.isWaveActive && state.enemiesSpawned >= state.totalEnemies && state.enemies.length === 0 && !state.gameOver) {
         state.victory = true;
         state.isWaveActive = false;
-        setMessage('🎉 Victory! All monsters defeated!');
+        setMessage(t('Victory! All monsters defeated!'));
         forceUpdate(v => v + 1);
       }
 
@@ -683,7 +685,7 @@ function PlayChallengeContent() {
     return () => {
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, [monsterHp, monsterSpeed, monsterType]);
+  }, [monsterHp, monsterSpeed, monsterType, t]);
 
   const handleSubmitResult = async () => {
     console.log('handleSubmitResult called', { 
@@ -695,13 +697,13 @@ function PlayChallengeContent() {
     
     if (!account) {
       console.log('Missing account');
-      setMessage('❌ Please connect wallet');
+      setMessage(t('Please connect wallet'));
       return;
     }
     
     if (!challengeId) {
       console.log('Missing challengeId');
-      setMessage('❌ Invalid challenge ID');
+      setMessage(t('Invalid challenge ID'));
       return;
     }
     if (submitting || submitted) {
@@ -715,7 +717,7 @@ function PlayChallengeContent() {
     console.log('Submitting result:', { success, gameOver: state.gameOver, victory: state.victory });
 
     setSubmitting(true);
-    setMessage(success ? '🎉 Submitting victory...' : '💀 Submitting defeat...');
+    setMessage(success ? t('Submitting victory...') : t('Submitting defeat...'));
     
     const tx = new Transaction();
     
@@ -737,7 +739,7 @@ function PlayChallengeContent() {
       const gameCoin = gameCoinsData.result?.data[0];
       
       if (!gameCoin) {
-        setMessage('❌ No GAME tokens found!');
+        setMessage(t('No GAME tokens found!'));
         setSubmitting(false);
         return;
       }
@@ -769,9 +771,9 @@ function PlayChallengeContent() {
             console.log('Transaction successful!');
             setSubmitted(true);
             if (success) {
-              setMessage('🎉 Challenge completed! Reward sent to your wallet!');
+              setMessage(t('Challenge completed! Reward sent to your wallet!'));
             } else {
-              setMessage('💀 Challenge failed. Entry fee forfeited.');
+              setMessage(t('Challenge failed. Entry fee forfeited.'));
             }
             setSubmitting(false);
             
@@ -782,14 +784,14 @@ function PlayChallengeContent() {
           },
           onError: (error: any) => {
             console.error('Transaction error:', error);
-            setMessage(`❌ Error: ${error.message}`);
+            setMessage(`${t('Error: ')}${error.message}`);
             setSubmitting(false);
           },
         }
       );
     } catch (error: any) {
       console.error('Error in handleSubmitResult:', error);
-      setMessage(`❌ Error: ${error.message}`);
+      setMessage(`${t('Error: ')}${error.message}`);
       setSubmitting(false);
     }
   };
@@ -821,13 +823,13 @@ function PlayChallengeContent() {
     <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-7xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold text-white">⚔️ Challenge Mode</h1>
+          <h1 className="text-3xl font-bold text-white">{t('Challenge Mode')}</h1>
           <div className="flex gap-3">
             <button
               onClick={toggleMusic}
               className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-bold transition-colors border-2 border-gray-600 hover:border-cyan-400"
             >
-              {isMusicPlaying ? '🔊 Music On' : '🔇 Music Off'}
+              {isMusicPlaying ? t('Music On') : t('Music Off')}
             </button>
             <button
               onClick={() => {
@@ -837,7 +839,7 @@ function PlayChallengeContent() {
                 } else {
                   // Game in progress, show warning
                   const confirmed = confirm(
-                    '⚠️ Warning: Leaving now will forfeit your entry fee and count as a loss. Are you sure?'
+                    t('Warning: Leaving now will forfeit your entry fee and count as a loss. Are you sure?')
                   );
                   if (confirmed) {
                     window.location.href = '/challenge-list';
@@ -846,14 +848,14 @@ function PlayChallengeContent() {
               }}
               className="bg-gray-700 text-white px-4 py-2 rounded-xl hover:bg-gray-600"
             >
-              ← Back
+              {t('Back')}
             </button>
           </div>
         </div>
 
         {message && (
           <div className="bg-blue-500/20 border border-blue-500 rounded-xl p-3 mb-4">
-            <p className="text-white text-sm">{message}</p>
+            <p className="text-white text-sm">{t(message)}</p>
           </div>
         )}
 
@@ -871,26 +873,26 @@ function PlayChallengeContent() {
           <div className="space-y-4">
             {/* Monster Info */}
             <div className="bg-gray-800 rounded-xl p-4 border-2 border-red-500">
-              <h3 className="text-white font-bold mb-2">👹 Monster</h3>
+              <h3 className="text-white font-bold mb-2">{t('Monster')}</h3>
               <div className="space-y-1 text-sm">
-                <p className="text-gray-400">HP: <span className="text-red-400 font-bold">{monsterHp}</span></p>
-                <p className="text-gray-400">Speed: <span className="text-blue-400 font-bold">{(monsterSpeed * 100).toFixed(0)}</span></p>
-                <p className="text-gray-400">Count: <span className="text-white font-bold">20</span></p>
+                <p className="text-gray-400">{t('HP:')} <span className="text-red-400 font-bold">{monsterHp}</span></p>
+                <p className="text-gray-400">{t('Speed:')} <span className="text-blue-400 font-bold">{(monsterSpeed * 100).toFixed(0)}</span></p>
+                <p className="text-gray-400">{t('Count:')} <span className="text-white font-bold">20</span></p>
               </div>
             </div>
 
             {/* Selected Tower Info */}
             {selectedTowerForPlacement && (
               <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-4 border-2 border-cyan-400">
-                <h3 className="text-cyan-300 font-bold mb-2">🎯 Selected Tower</h3>
+                <h3 className="text-cyan-300 font-bold mb-2">{t('Selected Tower')}</h3>
                 <div className="space-y-1 text-sm">
-                  <p className="text-white">⚔️ Damage: {selectedTowerForPlacement.damage}</p>
-                  <p className="text-white">🎯 Range: {selectedTowerForPlacement.range}</p>
+                  <p className="text-white">{t('Damage:')} {selectedTowerForPlacement.damage}</p>
+                  <p className="text-white">{t('Range:')} {selectedTowerForPlacement.range}</p>
                   <p className={`font-bold ${RARITY_COLORS[selectedTowerForPlacement.rarity]}`}>
-                    ⭐ {RARITY_NAMES[selectedTowerForPlacement.rarity]}
+                    ⭐ {t(RARITY_NAMES[selectedTowerForPlacement.rarity])}
                   </p>
                 </div>
-                <p className="text-cyan-200 text-xs mt-2">Click on the map to place</p>
+                <p className="text-cyan-200 text-xs mt-2">{t('Click on the map to place')}</p>
               </div>
             )}
 
@@ -898,7 +900,7 @@ function PlayChallengeContent() {
             {myTowers.length > 0 && (
               <div className="bg-gray-800 rounded-xl p-4 border-2 border-blue-500">
                 <h3 className="text-white font-bold mb-2">
-                  🗼 Your Towers ({placedTowers.length}/5 placed)
+                  {t('Your Towers ({count}/5 placed)').replace('{count}', placedTowers.length.toString())}
                 </h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {myTowers.map(tower => {
@@ -919,10 +921,10 @@ function PlayChallengeContent() {
                         <div className="flex justify-between items-center">
                           <div>
                             <p className={`text-xs font-bold ${RARITY_COLORS[tower.rarity]}`}>
-                              {RARITY_NAMES[tower.rarity]} {isPlaced && '✓'}
+                              {t(RARITY_NAMES[tower.rarity])} {isPlaced && '✓'}
                             </p>
                             <p className="text-xs text-gray-400">
-                              DMG: {tower.damage} | RNG: {tower.range}
+                              {t('DMG:')} {tower.damage} | {t('RNG:')} {tower.range}
                             </p>
                           </div>
                           {isSelected && <span className="text-cyan-400 text-xl">👉</span>}
@@ -933,7 +935,7 @@ function PlayChallengeContent() {
                 </div>
                 {placedTowers.length >= 5 && (
                   <p className="text-yellow-400 text-xs mt-2 text-center font-bold">
-                    ⚠️ Maximum towers placed!
+                    {t('Maximum towers placed!')}
                   </p>
                 )}
               </div>
@@ -941,12 +943,12 @@ function PlayChallengeContent() {
 
             {/* Stats */}
             <div className="bg-gray-800 rounded-xl p-4 border-2 border-gray-700">
-              <h3 className="text-white font-bold mb-2">📊 Stats</h3>
+              <h3 className="text-white font-bold mb-2">{t('Stats')}</h3>
               <div className="space-y-1 text-sm">
-                <p className="text-white">Lives: ❤️ {state.lives}</p>
-                <p className="text-white">Towers: {state.towers.length}/5</p>
-                <p className="text-white">Enemies: {state.enemies.length}</p>
-                <p className="text-white">Spawned: {state.enemiesSpawned}/{state.totalEnemies}</p>
+                <p className="text-white">{t('Lives:')} ❤️ {state.lives}</p>
+                <p className="text-white">{t('Towers:')} {state.towers.length}/5</p>
+                <p className="text-white">{t('Enemies:')} {state.enemies.length}</p>
+                <p className="text-white">{t('Spawned:')} {state.enemiesSpawned}/{state.totalEnemies}</p>
               </div>
             </div>
 
@@ -956,33 +958,33 @@ function PlayChallengeContent() {
                 disabled={state.towers.length === 0}
                 className="w-full bg-green-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-green-600 disabled:opacity-50"
               >
-                {state.towers.length === 0 ? '⚠️ Place at least 1 tower!' : `🚀 Start Challenge (${state.towers.length} towers)`}
+                {state.towers.length === 0 ? t('Place at least 1 tower!') : t('Start Challenge ({count} towers)').replace('{count}', state.towers.length.toString())}
               </button>
             )}
 
             {state.isWaveActive && (
               <div className="w-full bg-red-500/20 border-2 border-red-500 rounded-xl px-4 py-3">
-                <p className="text-red-400 font-bold text-center animate-pulse">⚔️ Challenge in Progress...</p>
+                <p className="text-red-400 font-bold text-center animate-pulse">{t('Challenge in Progress...')}</p>
               </div>
             )}
 
             {(state.gameOver || state.victory) && (
               <div className={`rounded-xl p-4 border-2 ${state.victory ? 'bg-green-500/20 border-green-500' : 'bg-red-500/20 border-red-500'}`}>
                 <p className={`font-bold text-center text-xl ${state.victory ? 'text-green-400' : 'text-red-400'}`}>
-                  {state.victory ? '🎉 Victory!' : '💀 Failed!'}
+                  {state.victory ? t('Victory!') : t('Failed!')}
                 </p>
                 {submitting && (
                   <p className="text-white text-sm text-center mt-2">
-                    💫 Submitting result...
+                    {t('Submitting result...')}
                   </p>
                 )}
                 {submitted && (
                   <>
                     <p className="text-white text-sm text-center mt-2">
-                      ✅ {state.victory ? 'Entry fee returned!' : 'Entry fee forfeited.'}
+                      {state.victory ? t('Entry fee returned!') : t('Entry fee forfeited.')}
                     </p>
                     <p className="text-gray-400 text-xs text-center mt-2">
-                      Returning to challenges in 3 seconds...
+                      {t('Returning to challenges in 3 seconds...')}
                     </p>
                   </>
                 )}
@@ -994,7 +996,7 @@ function PlayChallengeContent() {
                 onClick={() => window.location.href = '/challenge-list'}
                 className="w-full bg-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-blue-600"
               >
-                ← Back to Challenges Now
+                {t('Back to Challenges Now')}
               </button>
             )}
           </div>
@@ -1006,7 +1008,7 @@ function PlayChallengeContent() {
 
 export default function PlayChallengePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><p className="text-white">Loading...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><p className="text-white">{t('Loading...')}</p></div>}>
       <PlayChallengeContent />
     </Suspense>
   );

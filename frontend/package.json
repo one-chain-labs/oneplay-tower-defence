@@ -12,9 +12,11 @@
     "@onelabs/dapp-kit": "0.15.2",
     "@onelabs/sui": "1.26.1",
     "@tanstack/react-query": "^5.0.0",
+    "i18next": "^25.7.3",
     "next": "14.2.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "react-i18next": "^16.5.0"
   },
   "devDependencies": {
     "@types/node": "^20",

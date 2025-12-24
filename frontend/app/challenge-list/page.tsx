@@ -5,6 +5,7 @@ import { useCurrentAccount, useSuiClientQuery } from '@onelabs/dapp-kit';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useI18n } from '../providers';
 
 interface Challenge {
   id: string;
@@ -19,9 +20,7 @@ interface Challenge {
   currentWinners: number;
 }
 
-const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
-const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
-const TYPE_NAMES = ['', 'Normal', 'Fast', 'Tank'];
+
 const TYPE_EMOJI = ['', '👹', '⚡', '🛡️'];
 
 export default function ChallengeListPage() {
@@ -29,6 +28,10 @@ export default function ChallengeListPage() {
   const router = useRouter();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [activeChallengeIds, setActiveChallengeIds] = useState<Set<string>>(new Set());
+  const { t } = useI18n();
+
+  const rarityNames = ['', t('Common'), t('Rare'), t('Epic'), t('Legendary')];
+  const typeNames = ['', t('Normal'), t('Fast'), t('Tank')];
 
   // Fetch challenge events
   const { data: createdEvents } = useSuiClientQuery(
@@ -130,26 +133,26 @@ export default function ChallengeListPage() {
     <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-7xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-white">🎯 Active Challenges</h1>
+          <h1 className="text-4xl font-bold text-white">{t('Active Challenges')}</h1>
           <div className="flex gap-4">
             <Link
               href="/create-challenge"
               className="bg-purple-500 text-white px-6 py-2 rounded-xl hover:bg-purple-600 font-bold"
             >
-              Create Challenge
+              {t('Create Challenge')}
             </Link>
             <Link
               href="/"
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
             >
-              ← Back to Town
+              {t('Back to Town')}
             </Link>
           </div>
         </div>
 
         {!account && (
           <div className="bg-red-500/20 border border-red-500 rounded-xl p-6 text-center mb-6">
-            <p className="text-white text-lg">Please connect your wallet to view challenges</p>
+            <p className="text-white text-lg">{t('Please connect your wallet to view challenges')}</p>
           </div>
         )}
 
@@ -157,18 +160,18 @@ export default function ChallengeListPage() {
           <>
             <div className="mb-6">
               <p className="text-gray-400">
-                {challenges.length} active challenge{challenges.length !== 1 ? 's' : ''}
+                {challenges.length} {challenges.length !== 1 ? t('active challenges') : t('active challenge')}
               </p>
             </div>
 
             {challenges.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-400 text-lg mb-4">No active challenges</p>
+                <p className="text-gray-400 text-lg mb-4">{t('No active challenges')}</p>
                 <Link
                   href="/create-challenge"
                   className="inline-block bg-purple-500 text-white px-6 py-3 rounded-xl hover:bg-purple-600 font-bold"
                 >
-                  Create First Challenge
+                  {t('Create First Challenge')}
                 </Link>
               </div>
             ) : (
@@ -190,15 +193,15 @@ export default function ChallengeListPage() {
                         <div className="flex items-center gap-3">
                           <span className="text-4xl">{TYPE_EMOJI[challenge.monsterType]}</span>
                           <div>
-                            <p className={`font-bold ${RARITY_COLORS[challenge.monsterRarity]}`}>
-                              {RARITY_NAMES[challenge.monsterRarity]}
+                            <p className={`font-bold`}>
+                              {rarityNames[challenge.monsterRarity]}
                             </p>
-                            <p className="text-gray-400 text-sm">{TYPE_NAMES[challenge.monsterType]}</p>
+                            <p className="text-gray-400 text-sm">{typeNames[challenge.monsterType]}</p>
                           </div>
                         </div>
                         {isFull && (
                           <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                            FULL
+                            {t('FULL')}
                           </span>
                         )}
                       </div>
@@ -207,11 +210,11 @@ export default function ChallengeListPage() {
                       <div className="bg-gray-900 rounded-lg p-3 mb-4">
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
-                            <span className="text-gray-400">❤️ HP:</span>
+                            <span className="text-gray-400">{t('HP:')}</span>
                             <span className="text-white ml-2 font-bold">{challenge.monsterHp}</span>
                           </div>
                           <div>
-                            <span className="text-gray-400">⚡ Speed:</span>
+                            <span className="text-gray-400">{t('Speed:')}</span>
                             <span className="text-white ml-2 font-bold">{challenge.monsterSpeed}</span>
                           </div>
                         </div>
@@ -220,21 +223,21 @@ export default function ChallengeListPage() {
                       {/* Challenge Info */}
                       <div className="space-y-2 mb-4">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Entry Fee:</span>
+                          <span className="text-gray-400">{t('Entry Fee:')}</span>
                           <span className="text-yellow-400 font-bold">{challenge.entryFee} GAME</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Reward:</span>
+                          <span className="text-gray-400">{t('Reward:')}</span>
                           <span className="text-green-400 font-bold">{rewardPerWinner.toFixed(3)} GAME</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">ROI:</span>
+                          <span className="text-gray-400">{t('ROI:')}</span>
                           <span className={`font-bold ${parseFloat(roi) > 100 ? 'text-green-400' : 'text-red-400'}`}>
                             {roi}%
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Winners:</span>
+                          <span className="text-gray-400">{t('Winners:')}</span>
                           <span className="text-white font-bold">
                             {challenge.currentWinners} / {challenge.maxWinners}
                           </span>
@@ -244,7 +247,7 @@ export default function ChallengeListPage() {
                       {/* Creator */}
                       <div className="mb-4">
                         <p className="text-gray-500 text-xs">
-                          By: {challenge.creator.slice(0, 6)}...{challenge.creator.slice(-4)}
+                          {t('By:')} {challenge.creator.slice(0, 6)}...{challenge.creator.slice(-4)}
                         </p>
                       </div>
 
@@ -254,7 +257,7 @@ export default function ChallengeListPage() {
                         disabled={isFull}
                         className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isFull ? 'Challenge Full' : `Play (${challenge.entryFee} GAME)`}
+                        {isFull ? t('Challenge Full') : `${t('Play')} (${challenge.entryFee} GAME)`}
                       </button>
                     </div>
                   );

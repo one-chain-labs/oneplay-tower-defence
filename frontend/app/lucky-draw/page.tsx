@@ -6,6 +6,7 @@ import { Transaction } from '@onelabs/sui/transactions';
 import { mintTower, claimFaucet } from '@/lib/contracts';
 import { MINT_COST, PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
+import { useI18n } from '../providers';
 
 interface TowerNFT {
   id: string;
@@ -15,7 +16,6 @@ interface TowerNFT {
   rarity: number;
 }
 
-const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
 
 // Tower Card Icon Component
@@ -96,6 +96,9 @@ function TowerCardIcon({ rarity }: { rarity: number }) {
 export default function LuckyDrawPage() {
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const { t } = useI18n();
+
+  const RARITY_NAMES = ['', t('Common'), t('Rare'), t('Epic'), t('Legendary')];
 
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -162,21 +165,21 @@ export default function LuckyDrawPage() {
         const newTower = towers[0];
         console.log('New tower detected:', newTower);
         setMintedTower(newTower);
-        setMessage('🎉 Tower NFT minted!');
+        setMessage(t('Tower NFT minted!'));
       }
 
       setMyTowers(towers);
     }
-  }, [ownedTowers, showMintCard]);
+  }, [ownedTowers, showMintCard, mintedTower, t]);
 
   const handleClaimFaucet = () => {
     if (!account) {
-      setMessage('Please connect wallet first');
+      setMessage(t('Please connect wallet first'));
       return;
     }
 
     setLoading(true);
-    setMessage('💰 Claiming GAME tokens...');
+    setMessage(t('Claiming GAME tokens...'));
     
     const tx = new Transaction();
     claimFaucet(tx);
@@ -186,13 +189,13 @@ export default function LuckyDrawPage() {
       {
         onSuccess: (result: any) => {
           console.log('Faucet claimed successfully:', result);
-          setMessage('✅ Claimed 10 GAME tokens!');
+          setMessage(t('Claimed 10 GAME tokens!'));
           setLoading(false);
           refetchGameBalance();
         },
         onError: (error: any) => {
           console.error('Error:', error);
-          setMessage(`Error: ${error.message}`);
+          setMessage(`${t('Error: ')}${error.message}`);
           setLoading(false);
         },
       }
@@ -201,19 +204,19 @@ export default function LuckyDrawPage() {
 
   const handleMint = () => {
     if (!account) {
-      setMessage('Please connect wallet first');
+      setMessage(t('Please connect wallet first'));
       return;
     }
 
     if (gameBalance < MINT_COST) {
-      setMessage('❌ Not enough GAME tokens! Get GAME from OneChain faucet.');
+      setMessage(t('Not enough GAME tokens! Get GAME from OneChain faucet.'));
       return;
     }
 
     // Get the first GAME coin object
     const gameCoin = gameCoins?.data[0];
     if (!gameCoin) {
-      setMessage('❌ No GAME tokens found!');
+      setMessage(t('No GAME tokens found!'));
       return;
     }
 
@@ -221,7 +224,7 @@ export default function LuckyDrawPage() {
     setLoading(true);
     setShowMintCard(true);
     setMintedTower(null);
-    setMessage('🎰 Minting tower...');
+    setMessage(t('Minting tower...'));
     
     const tx = new Transaction();
     mintTower(tx, gameCoin.coinObjectId, MINT_COST);
@@ -232,13 +235,13 @@ export default function LuckyDrawPage() {
         onSuccess: (result: any) => {
           console.log('Tower minted successfully:', result);
           setLoading(false);
-          setMessage('🎰 Opening mystery box...');
+          setMessage(t('Opening mystery box...'));
           refetchTowers();
           refetchGameBalance();
         },
         onError: (error: any) => {
           console.error('Error:', error);
-          setMessage(`Error: ${error.message}`);
+          setMessage(`${t('Error: ')}${error.message}`);
           setLoading(false);
           setShowMintCard(false);
         },
@@ -252,37 +255,37 @@ export default function LuckyDrawPage() {
         <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
           <div className="mb-6 flex items-center gap-4">
             <Link href="/town" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg">
-              ← Back to Town
+              {t('Back to Town')}
             </Link>
           <Link href="/monster-draw" className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-2 rounded-xl font-bold hover:scale-105 transition-transform">
-            👹 Monster Draw
+            {t('Monster Draw')}
           </Link>
           <Link href="/my-towers" className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-2 rounded-xl font-bold hover:scale-105 transition-transform">
-            🎒 My Bag
+            {t('My Bag')}
           </Link>
         </div>
 
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-yellow-200 mb-4" style={{textShadow: '3px 3px 6px rgba(0,0,0,0.5)'}}>
-            🎁 Tower Lucky Draw
+            {t('Tower Lucky Draw')}
           </h1>
-          <p className="text-purple-200 text-lg">Open mystery boxes to get random tower NFTs!</p>
+          <p className="text-purple-200 text-lg">{t('Open mystery boxes to get random tower NFTs!')}</p>
         </div>
 
         {!account ? (
           <div className="bg-gradient-to-b from-red-600 to-red-800 border-4 border-red-900 rounded-2xl p-6 text-center shadow-2xl">
-            <p className="text-yellow-100 text-lg font-bold">🔐 Connect your wallet to start!</p>
+            <p className="text-yellow-100 text-lg font-bold">{t('Connect your wallet to start!')}</p>
           </div>
         ) : (
           <>
             <div className="bg-gradient-to-b from-amber-600 to-amber-800 rounded-2xl p-4 mb-6 border-4 border-amber-950 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-200 text-sm font-bold">💰 GAME Balance</p>
+                  <p className="text-yellow-200 text-sm font-bold">{t('GAME Balance')}</p>
                   <p className="text-yellow-50 text-2xl font-bold">{gameBalanceFormatted.toFixed(2)} GAME</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-yellow-200 text-sm font-bold">🗼 My Towers</p>
+                  <p className="text-yellow-200 text-sm font-bold">{t('My Towers')}</p>
                   <p className="text-yellow-50 text-2xl font-bold">{myTowers.length}</p>
                 </div>
               </div>
@@ -291,7 +294,7 @@ export default function LuckyDrawPage() {
                 disabled={loading}
                 className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-xl font-bold hover:scale-105 transition-transform disabled:opacity-50"
               >
-                💰 Claim Free GAME Tokens (10 GAME)
+                {t('Claim Free GAME Tokens (10 GAME)')}
               </button>
             </div>
 
@@ -314,20 +317,20 @@ export default function LuckyDrawPage() {
                   <div className="mb-6">
                     <img 
                       src="/ld.png"
-                      alt="Mystery Box" 
+                      alt={t('Mystery Box')} 
                       className="w-80 h-80 mx-auto drop-shadow-2xl"
                     />
                   </div>
                   
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border-2 border-white/20 mb-6">
                     <h2 className="text-2xl font-bold text-yellow-200 mb-3 drop-shadow-lg">
-                      Tower Mystery Box
+                      {t('Tower Mystery Box')}
                     </h2>
                     <p className="text-white mb-2 drop-shadow-lg text-lg">
-                      Get a random tower with unique stats!
+                      {t('Get a random tower with unique stats!')}
                     </p>
                     <p className="text-yellow-300 font-bold text-xl">
-                      Cost: {MINT_COST / 1_000_000_000} GAME
+                      {t('Cost:')} {MINT_COST / 1_000_000_000} GAME
                     </p>
                   </div>
 
@@ -336,20 +339,20 @@ export default function LuckyDrawPage() {
                     disabled={!account || loading}
                     className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 text-white px-8 py-6 rounded-xl font-bold text-2xl hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/50"
                   >
-                    {loading ? '✨ Minting...' : `🎁 Open Mystery Box (${MINT_COST / 1_000_000_000} GAME)`}
+                    {loading ? t('✨ Minting...') : `${t('Open Mystery Box')} (${MINT_COST / 1_000_000_000} GAME)`}
                   </button>
                 </div>
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6 border-2 border-cyan-400">
-              <h3 className="text-2xl font-bold text-cyan-300 mb-4">💡 How It Works</h3>
+              <h3 className="text-2xl font-bold text-cyan-300 mb-4">{t('How It Works')}</h3>
               <div className="space-y-3 text-cyan-100">
-                <p>• Click "Claim Free GAME Tokens" to get 10 GAME</p>
-                <p>• Pay {MINT_COST / 1_000_000_000} GAME to open a mystery box</p>
-                <p>• Get a random tower NFT with unique stats</p>
-                <p>• Higher rarity = stronger tower</p>
-                <p>• Use towers in game or trade on market</p>
+                <p>{t('Click "Claim Free GAME Tokens" to get 10 GAME')}</p>
+                <p>{t('Pay {MINT_COST} GAME to open a mystery box').replace('{MINT_COST}', (MINT_COST / 1_000_000_000).toString())}</p>
+                <p>{t('Get a random tower NFT with unique stats')}</p>
+                <p>{t('Higher rarity = stronger tower')}</p>
+                <p>{t('Use towers in game or trade on market')}</p>
               </div>
             </div>
           </>
@@ -361,7 +364,7 @@ export default function LuckyDrawPage() {
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gradient-to-br from-purple-600 via-pink-600 to-cyan-600 rounded-3xl p-8 border-4 border-yellow-400 max-w-md w-full mx-4 shadow-2xl shadow-purple-500/50">
             <h2 className="text-3xl font-bold text-white text-center mb-6 drop-shadow-lg">
-              ✨ Mystery Box ✨
+              {t('✨ Mystery Box ✨')}
             </h2>
             
             {!mintedTower ? (
@@ -369,11 +372,11 @@ export default function LuckyDrawPage() {
                 <div className="w-48 h-48 mx-auto mb-4 animate-bounce">
                   <img 
                     src="/ld.png" 
-                    alt="Opening..." 
+                    alt={t('Opening...')} 
                     className="w-full h-full drop-shadow-2xl"
                   />
                 </div>
-                <p className="text-white text-xl font-bold drop-shadow-lg">Opening box...</p>
+                <p className="text-white text-xl font-bold drop-shadow-lg">{t('Opening box...')}</p>
               </div>
             ) : (
               <div className="text-center">
@@ -383,20 +386,20 @@ export default function LuckyDrawPage() {
                 <p className={`text-3xl font-bold mb-2 drop-shadow-lg ${RARITY_COLORS[mintedTower.rarity]}`}>
                   {RARITY_NAMES[mintedTower.rarity]}
                 </p>
-                <p className="text-white text-xl mb-4 drop-shadow-lg">Tower NFT!</p>
+                <p className="text-white text-xl mb-4 drop-shadow-lg">{t('Tower NFT!')}</p>
                 
                 <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 mb-4 border-2 border-white/20">
                   <div className="space-y-2 text-left">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">⚔️ Damage:</span>
+                      <span className="text-gray-400">{t('Damage:')}</span>
                       <span className="text-white font-bold">{mintedTower.damage}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">🎯 Range:</span>
+                      <span className="text-gray-400">{t('Range:')}</span>
                       <span className="text-white font-bold">{mintedTower.range}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">⚡ Fire Rate:</span>
+                      <span className="text-gray-400">{t('Fire Rate:')}</span>
                       <span className="text-white font-bold">{mintedTower.fireRate}ms</span>
                     </div>
                   </div>
@@ -411,7 +414,7 @@ export default function LuckyDrawPage() {
                   }}
                   className="bg-gradient-to-r from-cyan-400 to-blue-400 text-gray-900 px-8 py-3 rounded-xl font-bold hover:scale-110 transition-transform shadow-lg"
                 >
-                  🎉 Awesome!
+                  {t('Awesome!')}
                 </button>
               </div>
             )}

@@ -8,6 +8,7 @@ import { playAndSubmit } from '@/lib/contracts';
 import { GAME_COST, PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
 import {networks} from '../providers';
+import { useI18n } from '../providers';
 
 interface Tower {
   id: string;
@@ -260,6 +261,7 @@ function generateRewardTower(wavesCleared: number) {
 function PlayPageContent() {
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const { t } = useI18n();
 
   // Fetch user's tower NFTs
   const { data: ownedTowers } = useSuiClientQuery(
@@ -529,7 +531,7 @@ function PlayPageContent() {
       }
       
       const tx = new Transaction();
-      tx.setGasBudget(100000000); // Set gas budget to 0.1 OCT
+      tx.setGasBudget(100000000); // Set gas budget to 0.1 GAME
       
       const paymentAmount = GAME_COST; // GAME_COST is already in smallest units
       console.log('Payment amount:', paymentAmount);
@@ -1336,14 +1338,14 @@ function PlayPageContent() {
     <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-6xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-4xl font-bold text-white">🎮 Tower Defense</h1>
+          <h1 className="text-4xl font-bold text-white">🎮 {t('towerDefense')}</h1>
           
           {/* Music Control Button */}
           <button
             onClick={toggleMusic}
             className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-bold transition-colors border-2 border-gray-600 hover:border-cyan-400"
           >
-            {isMusicPlaying ? '🔊 Music On' : '🔇 Music Off'}
+            {t(isMusicPlaying ? 'Music On' : 'Music Off')}
           </button>
         </div>
 
@@ -1369,7 +1371,7 @@ function PlayPageContent() {
             {myTowers.length > 0 && (
               <div className="bg-gray-800 rounded-xl p-4 border-2 border-blue-500">
                 <h3 className="text-white font-bold mb-2">
-                  🗼 Select Towers to Place
+                  🗼 {t('selectTowersToPlace')}
                 </h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {myTowers.map(tower => {
@@ -1395,9 +1397,9 @@ function PlayPageContent() {
                       >
                         <div className="flex justify-between items-center">
                           <span className={`font-bold ${RARITY_COLORS[tower.rarity]}`}>
-                            {RARITY_NAMES[tower.rarity]}
+                            {t(RARITY_NAMES[tower.rarity])}
                           </span>
-                          {isPlaced && <span className="text-green-400">✓ Placed</span>}
+                          {isPlaced && <span className="text-green-400">✓ {t('placed')}</span>}
                         </div>
                         <div className="text-sm text-gray-300 mt-1">
                           ⚔️ {tower.damage} | 🎯 {tower.range} | ⚡ {tower.fireRate}ms
@@ -1412,13 +1414,13 @@ function PlayPageContent() {
             {/* Selected Tower Info */}
             {selectedCard !== null && (
               <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-4 border-2 border-cyan-400 backdrop-blur-sm">
-                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 font-bold mb-2">🎯 Selected Tower</h3>
+                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 font-bold mb-2">🎯 {t('Selected Tower')}</h3>
                 <div className="space-y-1">
-                  <p className="text-white">⚔️ Damage: {availableCards[selectedCard].tower.damage}</p>
-                  <p className="text-white">🎯 Range: {availableCards[selectedCard].tower.range}</p>
-                  <p className="text-white">⚡ Fire Rate: {availableCards[selectedCard].tower.fireRate}ms</p>
+                  <p className="text-white">{t('Damage:')} {availableCards[selectedCard].tower.damage}</p>
+                  <p className="text-white">{t('Range:')} {availableCards[selectedCard].tower.range}</p>
+                  <p className="text-white">{t('Fire Rate:')} {availableCards[selectedCard].tower.fireRate}ms</p>
                   <p className={`font-bold ${['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'][availableCards[selectedCard].tower.rarity]}`}>
-                    ⭐ {['', 'Common', 'Rare', 'Epic', 'Legendary'][availableCards[selectedCard].tower.rarity]}
+                    ⭐ {t(['', 'Common', 'Rare', 'Epic', 'Legendary'][availableCards[selectedCard].tower.rarity])}
                   </p>
                 </div>
               </div>
@@ -1426,7 +1428,7 @@ function PlayPageContent() {
 
             {/* Tower Cards */}
             <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 rounded-2xl p-4 border-2 border-purple-400 backdrop-blur-sm">
-              <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 font-bold mb-3">🃏 Your Towers ({availableCards.length})</h3>
+              <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 font-bold mb-3">🃏 {t('yourTowers', { count: availableCards.length })}</h3>
               <div className="grid grid-cols-5 gap-2">
                 {availableCards.map((card) => (
                   <button
@@ -1450,17 +1452,17 @@ function PlayPageContent() {
                 ))}
               </div>
               <p className="text-xs text-cyan-200 mt-2 text-center">
-                {selectedCard !== null ? `⚔️${availableCards[selectedCard].tower.damage} 🎯${availableCards[selectedCard].tower.range}` : '👆 Select a tower'}
+                {selectedCard !== null ? `⚔️${availableCards[selectedCard].tower.damage} 🎯${availableCards[selectedCard].tower.range}` : `👆 ${t('selectATower')}`}
               </p>
             </div>
 
             {/* Game Stats */}
             <div className="bg-gray-800 rounded-xl p-4">
-              <h3 className="text-white font-bold mb-2">📊 Stats</h3>
-              <p className="text-white">Wave: {state.wave}/5</p>
-              <p className="text-white">Lives: ❤️ {state.lives}</p>
-              <p className="text-white">Towers: {state.towers.length}/5</p>
-              <p className="text-white">Enemies: {state.enemies.length}</p>
+              <h3 className="text-white font-bold mb-2">📊 {t('Stats')}</h3>
+              <p className="text-white">{t('wave')}: {state.wave}/5</p>
+              <p className="text-white">{t('lives')}: ❤️ {state.lives}</p>
+              <p className="text-white">{t('Towers')}: {state.towers.length}/5</p>
+              <p className="text-white">{t('Enemies')}: {state.enemies.length}</p>
             </div>
 
             {!state.isWaveActive && !state.gameOver && !state.victory && state.wave === 1 && (
@@ -1469,13 +1471,13 @@ function PlayPageContent() {
                 disabled={state.towers.length === 0}
                 className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
-                {state.towers.length === 0 ? '⚠️ Place towers first!' : '🚀 Start Game'}
+                {state.towers.length === 0 ? `⚠️ ${t('placeTowersFirst')}` : `🚀 ${t('startGame')}`}
               </button>
             )}
             
             {state.isWaveActive && (
               <div className="w-full bg-gradient-to-r from-red-500/20 to-orange-500/20 border-2 border-red-500 rounded-xl px-4 py-3">
-                <p className="text-red-400 font-bold text-center animate-pulse">⚔️ Wave {state.wave} in Progress...</p>
+                <p className="text-red-400 font-bold text-center animate-pulse">⚔️ {t('waveInProgress', { wave: state.wave })}</p>
               </div>
             )}
 
@@ -1483,7 +1485,7 @@ function PlayPageContent() {
               <>
                 <div className="bg-gradient-to-br from-yellow-900 to-orange-900 rounded-xl p-4 border-2 border-yellow-500">
                   <h3 className="text-white font-bold mb-2 text-center">
-                    {state.victory ? '🎉 Victory!' : '💀 Game Over'}
+                    {state.victory ? `🎉 ${t('Victory!')}` : `💀 ${t('gameOver')}`}
                   </h3>
                   <div className="text-center mb-3">
                     {(() => {
@@ -1492,14 +1494,14 @@ function PlayPageContent() {
                       return (
                         <>
                           <p className={`text-2xl font-bold ${dropChance > 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
-                            {dropChance > 0 ? `🎁 ${dropChance}% NFT Drop` : 'No Reward'}
+                            {dropChance > 0 ? `🎁 ${dropChance}% ${t('nftDrop')}` : t('noReward')}
                           </p>
                           <p className="text-gray-300 text-sm">
-                            Cleared {wavesCleared} waves
+                            {t('clearedWaves', { waves: wavesCleared })}
                           </p>
                           {dropChance > 0 && (
                             <p className="text-green-400 text-xs mt-1">
-                              Chance to get reward tower NFT!
+                              {t('chanceToGetRewardTower')}
                             </p>
                           )}
                         </>
@@ -1508,12 +1510,12 @@ function PlayPageContent() {
                   </div>
                   {submitting && (
                     <p className="text-white text-sm text-center mb-2">
-                      💫 Submitting result to blockchain...
+                      💫 {t('submittingToBlockchain')}
                     </p>
                   )}
                   {!towerNftId && (
                     <p className="text-gray-400 text-xs text-center">
-                      (Test mode - no blockchain submission)
+                      {t('testModeNoSubmission')}
                     </p>
                   )}
                 </div>
@@ -1523,13 +1525,13 @@ function PlayPageContent() {
                     onClick={() => handleSubmitResult(state.victory ? 5 : (state.wave > 1 ? state.wave - 1 : 0))}
                     className="w-full bg-yellow-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-yellow-600"
                   >
-                    📤 Submit Result & Roll for Reward
+                    📤 {t('submitAndRoll')}
                   </button>
                 )}
 
                 {submitted && (
                   <div className="bg-green-500/20 border border-green-500 rounded-xl p-3">
-                    <p className="text-green-400 text-center font-bold">✅ Result Submitted!</p>
+                    <p className="text-green-400 text-center font-bold">✅ {t('resultSubmitted')}</p>
                   </div>
                 )}
 
@@ -1537,23 +1539,23 @@ function PlayPageContent() {
                   href="/history"
                   className="block w-full bg-blue-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-blue-600 text-center"
                 >
-                  📊 View History
+                  📊 {t('viewHistory')}
                 </Link>
 
                 <Link
                   href="/"
                   className="block w-full bg-green-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-green-600 text-center"
                 >
-                  🎮 Play Again
+                  🎮 {t('playAgain')}
                 </Link>
               </>
             )}
 
             <div className="bg-gray-800 rounded-xl p-4">
-              <h3 className="text-white font-bold mb-2">💡 Tips</h3>
-              <p className="text-xs text-gray-300">• Select card first</p>
-              <p className="text-xs text-gray-300">• Can't build on path</p>
-              <p className="text-xs text-gray-300">• Place near corners</p>
+              <h3 className="text-white font-bold mb-2">💡 {t('tips')}</h3>
+              <p className="text-xs text-gray-300">• {t('tipSelectCard')}</p>
+              <p className="text-xs text-gray-300">• {t('tipBuildOnPath')}</p>
+              <p className="text-xs text-gray-300">• {t('tipPlaceCorners')}</p>
             </div>
           </div>
         </div>
@@ -1564,7 +1566,7 @@ function PlayPageContent() {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-gradient-to-br from-purple-900 to-blue-900 rounded-2xl p-8 border-4 border-yellow-500 max-w-md w-full mx-4 animate-bounce">
             <h2 className="text-3xl font-bold text-white text-center mb-6">
-              🎰 NFT Reward Roll
+              🎰 {t('nftRewardRoll')}
             </h2>
             
             {!rewardResult ? (
@@ -1572,7 +1574,7 @@ function PlayPageContent() {
                 <div className="w-32 h-32 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl animate-spin flex items-center justify-center">
                   <span className="text-6xl">🎁</span>
                 </div>
-                <p className="text-white text-xl font-bold">Rolling...</p>
+                <p className="text-white text-xl font-bold">{t('rolling')}...</p>
               </div>
             ) : (
               <div className="text-center">
@@ -1590,37 +1592,37 @@ function PlayPageContent() {
                       rewardResult.tower.rarity === 3 ? 'text-purple-400' :
                       rewardResult.tower.rarity === 2 ? 'text-blue-400' : 'text-gray-400'
                     }`}>
-                      {rewardResult.tower.rarityName}
+                      {t(rewardResult.tower.rarityName)}
                     </p>
-                    <p className="text-white text-xl mb-4">Tower NFT!</p>
+                    <p className="text-white text-xl mb-4">{t('Tower NFT!')}</p>
                     
                     <div className="bg-gray-800 rounded-lg p-4 mb-4">
                       <div className="space-y-2 text-left">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">⚔️ Damage:</span>
+                          <span className="text-gray-400">{t('Damage:')}</span>
                           <span className="text-white font-bold">{rewardResult.tower.damage}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">🎯 Range:</span>
+                          <span className="text-gray-400">{t('Range:')}</span>
                           <span className="text-white font-bold">{rewardResult.tower.range}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">⚡ Fire Rate:</span>
+                          <span className="text-gray-400">{t('Fire Rate:')}</span>
                           <span className="text-white font-bold">{rewardResult.tower.fireRate}ms</span>
                         </div>
                       </div>
                     </div>
                     
-                    <p className="text-green-400 text-sm mb-4">✨ Added to your inventory!</p>
+                    <p className="text-green-400 text-sm mb-4">✨ {t('addedToInventory')}</p>
                   </>
                 ) : (
                   <>
                     <div className="w-32 h-32 mx-auto mb-4 bg-gray-700 rounded-xl flex items-center justify-center">
                       <span className="text-6xl">📦</span>
                     </div>
-                    <p className="text-gray-400 text-3xl font-bold mb-2">No Drop</p>
-                    <p className="text-white text-xl mb-4">Better luck next time!</p>
-                    <p className="text-gray-300 text-sm">You had {rewardResult.dropChance}% chance</p>
+                    <p className="text-gray-400 text-3xl font-bold mb-2">{t('No Drop')}</p>
+                    <p className="text-white text-xl mb-4">{t('betterLuckNextTime')}</p>
+                    <p className="text-gray-300 text-sm">{t('youHadChance', { chance: rewardResult.dropChance })}</p>
                   </>
                 )}
                 
@@ -1628,7 +1630,7 @@ function PlayPageContent() {
                   onClick={() => setShowRewardCard(false)}
                   className="mt-6 bg-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600"
                 >
-                  Close
+                  {t('close')}
                 </button>
               </div>
             )}
@@ -1642,27 +1644,27 @@ function PlayPageContent() {
           <div className="text-center">
             <div className="mb-8 animate-bounce">
               <div className="text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-pulse">
-                WAVE {transitionWave}
+                {t('waveTitle', { wave: transitionWave })}
               </div>
             </div>
             
             <div className="space-y-4">
               <div className="flex items-center justify-center gap-4">
                 <div className="h-1 w-32 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
-                <div className="text-2xl text-cyan-400 font-bold animate-pulse">INCOMING</div>
+                <div className="text-2xl text-cyan-400 font-bold animate-pulse">{t('incoming')}</div>
                 <div className="h-1 w-32 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
               </div>
               
               <div className="text-white text-lg">
-                {transitionWave === 2 && '🏃 Fast enemies incoming!'}
-                {transitionWave === 3 && '⚡ Speed and power combined!'}
-                {transitionWave === 4 && '🛡️ Tank units detected!'}
-                {transitionWave === 5 && '💀 FINAL WAVE - All enemy types!'}
+                {transitionWave === 2 && t('fastEnemiesIncoming')}
+                {transitionWave === 3 && t('speedAndPower')}
+                {transitionWave === 4 && t('tankUnitsDetected')}
+                {transitionWave === 5 && t('finalWave')}
               </div>
               
               <div className="mt-8">
                 <div className="inline-block px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-2 border-cyan-400 rounded-xl">
-                  <span className="text-cyan-300 font-bold">Prepare yourself...</span>
+                  <span className="text-cyan-300 font-bold">{t('prepareYourself')}...</span>
                 </div>
               </div>
             </div>
@@ -1684,13 +1686,13 @@ function PlayPageContent() {
               </div>
               
               <h2 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                {state.victory ? 'VICTORY!' : 'GAME OVER'}
+                {t(state.victory ? 'victory' : 'gameOver')}
               </h2>
               
               <p className="text-2xl text-white mb-6 drop-shadow-lg">
                 {state.victory 
-                  ? 'You cleared all 5 waves!' 
-                  : `Cleared ${state.wave > 1 ? state.wave - 1 : 0} waves`
+                  ? t('clearedAllWaves') 
+                  : t('clearedWaves', { waves: state.wave > 1 ? state.wave - 1 : 0 })
                 }
               </p>
 
@@ -1701,17 +1703,17 @@ function PlayPageContent() {
                 
                 return dropChance > 0 ? (
                   <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border-2 border-white/30">
-                    <p className="text-white font-bold mb-2">🎁 NFT Reward Chance:</p>
+                    <p className="text-white font-bold mb-2">🎁 {t('nftRewardChance')}</p>
                     <p className={`text-3xl font-bold ${rewardInfo.color}`}>
                       {dropChance}%
                     </p>
                     <p className="text-white text-sm mt-1">
-                      {rewardInfo.rarity} Tower
+                      {t('rarityTower', { rarity: rewardInfo.rarity })}
                     </p>
                   </div>
                 ) : (
                   <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border-2 border-white/30">
-                    <p className="text-gray-300">Clear 2+ waves for NFT rewards</p>
+                    <p className="text-gray-300">{t('clear2WavesForNft')}</p>
                   </div>
                 );
               })()}
@@ -1726,7 +1728,7 @@ function PlayPageContent() {
                     disabled={submitting}
                     className="w-full bg-gradient-to-r from-cyan-400 to-blue-400 text-gray-900 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg disabled:opacity-50"
                   >
-                    {submitting ? '⏳ Submitting...' : `📤 Submit Result (${GAME_COST} OCT)`}
+                    {submitting ? `⏳ ${t('Submitting...')}` : `📤 ${t('submitResult')}`}
                   </button>
                 ) : (
                   // Failed - Show sacrifice selection
@@ -1737,20 +1739,20 @@ function PlayPageContent() {
                     }}
                     className="w-full bg-gradient-to-r from-red-400 to-orange-400 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg"
                   >
-                    ⚔️ Choose Tower to Sacrifice
+                    ⚔️ {t('chooseTowerToSacrifice')}
                   </button>
                 )
               ) : (
                 <div className="space-y-3">
                   <div className="bg-green-500/30 border-2 border-green-400 rounded-xl p-3">
-                    <p className="text-white font-bold text-center">✅ Result Submitted!</p>
-                    <p className="text-white text-sm text-center mt-2">Redirecting to home in 3 seconds...</p>
+                    <p className="text-white font-bold text-center">✅ {t('resultSubmitted')}</p>
+                    <p className="text-white text-sm text-center mt-2">{t('redirectingToHome')}</p>
                   </div>
                   <button
                     onClick={() => window.location.href = '/'}
                     className="w-full bg-white text-gray-900 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg"
                   >
-                    🏠 Back to Home Now
+                    🏠 {t('backToHomeNow')}
                   </button>
                 </div>
               )}
@@ -1765,12 +1767,12 @@ function PlayPageContent() {
           <div className="max-w-4xl w-full bg-gradient-to-br from-red-900/90 to-gray-900/90 rounded-3xl p-8 border-4 border-red-500 shadow-2xl">
             <div className="text-center mb-6">
               <div className="text-6xl mb-4">⚔️</div>
-              <h2 className="text-4xl font-bold text-white mb-2">Choose Tower to Sacrifice</h2>
+              <h2 className="text-4xl font-bold text-white mb-2">{t('chooseTowerToSacrifice')}</h2>
               <p className="text-red-300 text-lg">
-                You failed to complete all 5 waves. Select a tower to burn.
+                {t('failedToCompleteWaves')}
               </p>
               <p className="text-gray-400 text-sm mt-2">
-                Cleared {state.wave > 1 ? state.wave - 1 : 0} waves
+                {t('clearedWaves', { waves: state.wave > 1 ? state.wave - 1 : 0 })}
               </p>
             </div>
 
@@ -1793,13 +1795,6 @@ function PlayPageContent() {
                   3: 'text-purple-400',
                   4: 'text-yellow-400',
                 };
-                
-                const RARITY_NAMES: Record<number, string> = {
-                  1: 'Common',
-                  2: 'Rare',
-                  3: 'Epic',
-                  4: 'Legendary',
-                };
 
                 return (
                   <div
@@ -1813,7 +1808,7 @@ function PlayPageContent() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className={`font-bold text-sm ${RARITY_COLORS[tower.rarity]}`}>
-                        {RARITY_NAMES[tower.rarity]}
+                        {t(RARITY_NAMES[tower.rarity])}
                       </span>
                       {sacrificeTowerId === tower.id && (
                         <span className="text-red-500 text-xl">🔥</span>
@@ -1822,15 +1817,15 @@ function PlayPageContent() {
                     
                     <div className="space-y-1 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">⚔️ DMG:</span>
+                        <span className="text-gray-400">⚔️ {t('DMG:')}</span>
                         <span className="text-white font-bold">{tower.damage}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">🎯 RNG:</span>
+                        <span className="text-gray-400">🎯 {t('RNG:')}</span>
                         <span className="text-white font-bold">{tower.range}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">⚡ FR:</span>
+                        <span className="text-gray-400">⚡ {t('FR:')}</span>
                         <span className="text-white font-bold">{tower.fireRate}</span>
                       </div>
                     </div>
@@ -1854,13 +1849,13 @@ function PlayPageContent() {
                 }}
                 className="flex-1 bg-gray-700 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition-colors"
               >
-                ← Back
+                {t('Back')}
               </button>
               
               <button
                 onClick={() => {
                   if (!sacrificeTowerId) {
-                    alert('Please select a tower to sacrifice');
+                    alert(t('selectTowerToSacrifice'));
                     return;
                   }
                   const wavesCleared = state.wave > 1 ? state.wave - 1 : 0;
@@ -1871,7 +1866,7 @@ function PlayPageContent() {
                 disabled={!sacrificeTowerId || submitting}
                 className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-red-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {submitting ? '⏳ Submitting...' : '🔥 Sacrifice & Submit'}
+                {submitting ? `⏳ ${t('Submitting...')}` : `🔥 ${t('sacrificeAndSubmit')}`}
               </button>
             </div>
           </div>
@@ -1881,9 +1876,14 @@ function PlayPageContent() {
   );
 }
 
+function LoadingFallback() {
+  const { t } = useI18n();
+  return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><p className="text-white">{t('Loading...')}</p></div>;
+}
+
 export default function PlayPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><p className="text-white">Loading...</p></div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <PlayPageContent />
     </Suspense>
   );
