@@ -1,21 +1,25 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { 
-  SuiClientProvider, 
+import {
+  SuiClientProvider,
   WalletProvider,
-  ConnectButton 
+  ConnectButton
 } from '@onelabs/dapp-kit';
 import { getFullnodeUrl } from '@onelabs/sui/client';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCurrentAccount } from '@onelabs/dapp-kit';
 import '@onelabs/dapp-kit/dist/index.css';
+import '../lib/constants.ts';
 
-const networks = {
-  testnet: { url: 'https://rpc-testnet.onelabs.cc' },
-  mainnet: { url: getFullnodeUrl('mainnet') },
+export const networks = {
+  testnet: { url: 'https://rpc-testnet.onelabs.cc:443' },
+  mainnet: { url: "https://rpc-mainnet.onelabs.cc:443" },
 };
+
+// Define NETWORK_RPC constant
+const NETWORK_RPC = process.env.NEXT_PUBLIC_NETWORK || 'testnet'; // or 'mainnet' depending on your environment
 
 function NavBar() {
   const pathname = usePathname();
@@ -27,9 +31,9 @@ function NavBar() {
       {/* Logo - only on main page when logged in */}
       {isMainPage && account && (
         <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-[60]">
-          <img 
-            src="/logo.png" 
-            alt="Tower Defense GameFi" 
+          <img
+            src="/logo.png"
+            alt="Tower Defense GameFi"
             className="drop-shadow-2xl"
             style={{
               filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.8))',
@@ -40,7 +44,7 @@ function NavBar() {
           />
         </div>
       )}
-      
+
       {/* Wallet button - always visible */}
       <div className="fixed top-4 right-4 z-[60]">
         <ConnectButton />
@@ -61,8 +65,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networks} defaultNetwork="testnet">
-        <WalletProvider 
+      <SuiClientProvider networks={networks} defaultNetwork={NETWORK_RPC as 'testnet' | 'mainnet'}>
+        <WalletProvider
           autoConnect
           preferredWallets={['Sui Wallet', 'OneWallet']}
         >

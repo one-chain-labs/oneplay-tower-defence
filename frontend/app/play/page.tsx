@@ -7,6 +7,7 @@ import { Transaction } from '@onelabs/sui/transactions';
 import { playAndSubmit } from '@/lib/contracts';
 import { GAME_COST, PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
+import {networks} from '../providers';
 
 interface Tower {
   id: string;
@@ -63,6 +64,8 @@ const GAME_PATH = [
 const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
 
+const NETWORK_RPC = (process.env.NEXT_PUBLIC_NETWORK || 'testnet') as keyof typeof networks;
+const NETWORK_RPC_URL = networks[NETWORK_RPC].url;
 // Tower Card Icon Component
 function TowerCardIcon({ rarity }: { rarity: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -506,7 +509,7 @@ function PlayPageContent() {
     
     // Get GAME token
     try {
-      const gameCoinsResponse = await fetch('https://rpc-testnet.onelabs.cc', {
+      const gameCoinsResponse = await fetch(NETWORK_RPC_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

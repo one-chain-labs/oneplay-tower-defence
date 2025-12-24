@@ -5,6 +5,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } fr
 import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
+import {networks} from '../providers';
 
 interface Listing {
   id: string;
@@ -20,6 +21,8 @@ interface Listing {
 const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
 const RARITY_BG = ['', 'bg-gray-500', 'bg-blue-500', 'bg-purple-500', 'bg-yellow-500'];
+const NETWORK_RPC = (process.env.NEXT_PUBLIC_NETWORK || 'testnet') as keyof typeof networks;
+const NETWORK_RPC_URL = networks[NETWORK_RPC].url;
 
 export default function MarketplacePage() {
   const account = useCurrentAccount();
@@ -117,11 +120,11 @@ export default function MarketplacePage() {
         setListings([]);
         return;
       }
-
+ 
       try {
         const listingPromises = Array.from(activeListingIds).map(async (id) => {
           try {
-            const response = await fetch('https://rpc-testnet.onelabs.cc', {
+            const response = await fetch(NETWORK_RPC_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
