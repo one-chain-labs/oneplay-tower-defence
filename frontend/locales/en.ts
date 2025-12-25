@@ -149,7 +149,7 @@ export const en = {
   'Open mystery boxes to get random tower NFTs!': 'Open mystery boxes to get random tower NFTs!',
   'Connect your wallet to start!': '🔐 Connect your wallet to start!',
   'GAME Balance': '💰 GAME Balance',
-  'claimFreeTokens': '💰 Claim Free {currency} Tokens (10 {currency})',
+  'claimFreeTokens': '💰 Claim Free GAME Tokens (10 GAME)',
   'Mystery Box': 'Mystery Box',
   'Tower Mystery Box': 'Tower Mystery Box',
   'Get a random tower with unique stats!': 'Get a random tower with unique stats!',
@@ -328,5 +328,14 @@ export const en = {
   "prepareYourself": "Prepare yourself...",
   "Submitting...": "Submitting...",
   "FR:": "FR:",
-  "currency": "GAME"
+  "currency": "GAME",
+  "town.gameArena": "Game Arena",
+  "town.luckyDraw": "Lucky Draw",
+  "town.challengeHall": "Challenge Hall",
+  "town.myTowers": "My Towers",
+  "town.marketplace": "Marketplace",
+  "town.historyBoard": "History Board",
+  "selectTowerCardAndPlace": "Select a tower card and place it on the map!",
+  "Click.free.token": "Click 'Claim Free GAME Tokens' to get 10 GAME",
+  "Pay.mint.cost": "Pay {MINT_COST} GAME to open a mystery box"
 };

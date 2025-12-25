@@ -236,8 +236,8 @@ export default function MonsterDrawPage() {
             <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6 border-2 border-red-400">
               <h3 className="text-2xl font-bold text-red-300 mb-4">{t('How It Works')}</h3>
               <div className="space-y-3 text-orange-100">
-                <p>{t('Pay {MINT_COST} GAME to open a mystery box').replace('{MINT_COST}', (MINT_COST / 1_000_000_000).toString())}</p>
-                <p>{t('Get a random monster NFT with unique abilities')}</p>
+                <p>{t('Pay.mint.cost').replace('{MINT_COST}', (MINT_COST / 1_000_000_000).toString())}</p>
+                <p>{t('Get a random monster NFT with unique abilities')}</p> 
                 <p>{t('Higher rarity = stronger monster')}</p>
                 <p>{t('Use monsters to create challenges')}</p>
               </div>

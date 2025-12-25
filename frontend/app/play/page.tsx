@@ -353,7 +353,7 @@ function PlayPageContent() {
   }, []);
 
   const [, forceUpdate] = useState(0);
-  const [message, setMessage] = useState('Select a tower card and place it on the map!');
+  const [message, setMessage] = useState(t('selectTowerCardAndPlace'));
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [showRewardCard, setShowRewardCard] = useState(false);

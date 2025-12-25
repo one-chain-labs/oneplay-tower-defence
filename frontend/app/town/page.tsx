@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useI18n } from '../providers';
 
 export default function TownPage() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [hoveredBuilding, setHoveredBuilding] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 

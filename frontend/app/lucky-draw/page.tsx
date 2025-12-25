@@ -294,7 +294,7 @@ export default function LuckyDrawPage() {
                 disabled={loading}
                 className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-xl font-bold hover:scale-105 transition-transform disabled:opacity-50"
               >
-                {t('Claim Free GAME Tokens (10 GAME)')}
+                {t('claimFreeTokens', { defaultValue: 'Claim Free GAME Tokens (10 GAME)' })}
               </button>
             </div>
 
@@ -348,8 +348,8 @@ export default function LuckyDrawPage() {
             <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6 border-2 border-cyan-400">
               <h3 className="text-2xl font-bold text-cyan-300 mb-4">{t('How It Works')}</h3>
               <div className="space-y-3 text-cyan-100">
-                <p>{t('Click "Claim Free GAME Tokens" to get 10 GAME')}</p>
-                <p>{t('Pay {MINT_COST} GAME to open a mystery box').replace('{MINT_COST}', (MINT_COST / 1_000_000_000).toString())}</p>
+                <p>{t('Click.free.token')}</p>
+                <p>{t('Pay.mint.cost').replace('{MINT_COST}', (MINT_COST / 1_000_000_000).toString())}</p>
                 <p>{t('Get a random tower NFT with unique stats')}</p>
                 <p>{t('Higher rarity = stronger tower')}</p>
                 <p>{t('Use towers in game or trade on market')}</p>

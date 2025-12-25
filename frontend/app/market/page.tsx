@@ -18,7 +18,6 @@ interface Listing {
   rarity: number;
 }
 
-const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
 const RARITY_BG = ['', 'bg-gray-500', 'bg-blue-500', 'bg-purple-500', 'bg-yellow-500'];
 const NETWORK_RPC = (process.env.NEXT_PUBLIC_NETWORK || 'testnet') as keyof typeof networks;
@@ -32,6 +31,8 @@ export default function MarketplacePage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeListingIds, setActiveListingIds] = useState<Set<string>>(new Set());
+
+  const RARITY_NAMES = ['', t('Common'), t('Rare'), t('Epic'), t('Legendary')];
 
   // Fetch listing events
   const { data: listedEvents } = useSuiClientQuery(
@@ -190,20 +191,20 @@ export default function MarketplacePage() {
   // Buy tower
   const handleBuy = (listing: Listing) => {
     if (!account) {
-      setMessage('Please connect wallet first');
+      setMessage(t('Please connect wallet first'));
       return;
     }
 
     // Get the first GAME coin object
     const gameCoin = gameCoins?.data[0];
     if (!gameCoin) {
-      setMessage('❌ No GAME tokens found!');
+      setMessage(t('No GAME tokens found!'));
       return;
     }
 
     const gameBalance = gameCoins?.data.reduce((sum, coin) => sum + Number(coin.balance), 0) || 0;
     if (gameBalance < listing.price * 1_000_000_000) {
-      setMessage('❌ Not enough GAME tokens!');
+      setMessage(t('Not enough GAME tokens!'));
       return;
     }
 
@@ -223,7 +224,7 @@ export default function MarketplacePage() {
       { transaction: tx as any },
       {
         onSuccess: () => {
-          setMessage(`🎉 Tower purchased for ${listing.price} GAME!`);
+          setMessage(`${t('Tower purchased for')} ${listing.price} ${t('GAME')}!`);
           setLoading(false);
           // Remove from active listings
           setActiveListingIds(prev => {
@@ -233,7 +234,7 @@ export default function MarketplacePage() {
           });
         },
         onError: (error: any) => {
-          setMessage(`❌ Error: ${error.message}`);
+          setMessage(`${t('Error: ')}${error.message}`);
           setLoading(false);
         },
       }
@@ -244,19 +245,19 @@ export default function MarketplacePage() {
     <div className="min-h-screen bg-cover bg-center bg-no-repeat p-8" style={{ backgroundImage: 'url(/background.png)' }}>
       <div className="max-w-7xl mx-auto bg-black/60 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-white">🏪 Tower Marketplace</h1>
+          <h1 className="text-4xl font-bold text-white">{t('Tower Marketplace')}</h1>
           <div className="flex gap-4">
             <Link
               href="/my-listings"
               className="bg-purple-500 text-white px-6 py-2 rounded-xl hover:bg-purple-600 font-bold"
             >
-              My Listings
+              {t('My Listings')}
             </Link>
             <Link
               href="/"
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
             >
-              ← Back to Town
+              {t('Back to Town')}
             </Link>
           </div>
         </div>
@@ -269,7 +270,7 @@ export default function MarketplacePage() {
 
         {!account && (
           <div className="bg-red-500/20 border border-red-500 rounded-xl p-6 text-center">
-            <p className="text-white text-lg">Please connect your wallet to view marketplace</p>
+            <p className="text-white text-lg">{t('Please connect your wallet to view marketplace')}</p>
           </div>
         )}
 
@@ -277,14 +278,14 @@ export default function MarketplacePage() {
           <>
             <div className="mb-6">
               <p className="text-gray-400">
-                {listings.length} tower{listings.length !== 1 ? 's' : ''} available
+                {listings.length} {listings.length === 1 ? t('tower') : t('towers')} {t('available')}
               </p>
             </div>
 
             {listings.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-400 text-lg mb-4">No towers listed for sale</p>
-                <p className="text-gray-500">Be the first to list your tower!</p>
+                <p className="text-gray-400 text-lg mb-4">{t('No towers listed for sale')}</p>
+                <p className="text-gray-500">{t('Be the first to list your tower!')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -302,28 +303,28 @@ export default function MarketplacePage() {
 
                     <div className="space-y-3 mb-4">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">⚔️ Damage:</span>
+                        <span className="text-gray-400">{t('Damage:')}</span>
                         <span className="text-white font-bold">{listing.damage}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">🎯 Range:</span>
+                        <span className="text-gray-400">{t('Range:')}</span>
                         <span className="text-white font-bold">{listing.range}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">⚡ Fire Rate:</span>
+                        <span className="text-gray-400">{t('Fire Rate:')}</span>
                         <span className="text-white font-bold">{listing.fireRate}ms</span>
                       </div>
                     </div>
 
                     <div className="border-t border-gray-700 pt-4">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-gray-400 text-sm">Price:</span>
+                        <span className="text-gray-400 text-sm">{t('Price:')}</span>
                         <span className="text-yellow-400 text-2xl font-bold">{listing.price} GAME</span>
                       </div>
 
                       <div className="mb-3">
                         <p className="text-gray-500 text-xs">
-                          Seller: {listing.seller.slice(0, 6)}...{listing.seller.slice(-4)}
+                          {t('Seller:')} {listing.seller.slice(0, 6)}...{listing.seller.slice(-4)}
                         </p>
                       </div>
 
