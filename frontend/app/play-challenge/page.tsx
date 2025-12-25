@@ -1007,9 +1007,10 @@ function PlayChallengeContent() {
 }
 
 export default function PlayChallengePage() {
+  const { t } = useI18n();
   return (
     <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><p className="text-white">{t('Loading...')}</p></div>}>
       <PlayChallengeContent />
     </Suspense>
-  );
+  ); 
 }
