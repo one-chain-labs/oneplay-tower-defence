@@ -1,0 +1,30 @@
+---
+compiled_package_info:
+  package_name: tower_defense
+  address_alias_instantiation:
+    one: "0000000000000000000000000000000000000000000000000000000000000002"
+    std: "0000000000000000000000000000000000000000000000000000000000000001"
+    tower_defense: "0000000000000000000000000000000000000000000000000000000000000000"
+  source_digest: E748B6260D8C443CFB94A3A9154D68B08C22E10E5D4B9CBDE3B01984DA299968
+  build_flags:
+    dev_mode: false
+    test_mode: false
+    generate_docs: false
+    install_dir: ~
+    force_recompilation: false
+    lock_file: "./Move.lock"
+    fetch_deps_only: false
+    skip_fetch_latest_git_deps: false
+    default_flavor: one
+    default_edition: ~
+    deps_as_root: false
+    silence_warnings: false
+    warnings_are_errors: false
+    json_errors: false
+    additional_named_addresses: {}
+    lint_flag:
+      no_lint: false
+      lint: false
+dependencies:
+  - MoveStdlib
+  - One
