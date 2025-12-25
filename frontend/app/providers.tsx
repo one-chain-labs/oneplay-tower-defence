@@ -41,7 +41,7 @@ export function useI18n() {
 }
 
 function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('zh');
 
   const t = (key: string, params?: Record<string, string | number>) => {
     let translation = (translations[language] as Record<string, string>)[key] || key;
@@ -97,10 +97,10 @@ function NavBar() {
       {/* Wallet and language switcher */}
       <div className="fixed top-4 right-4 z-[60] flex items-center gap-x-4">
         <button
-          onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+          onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
           className="px-3 py-2 text-sm font-medium text-white bg-black/20 rounded-md backdrop-blur-sm"
         >
-          {language === 'en' ? '简体中文' : 'English'}
+          {language === 'zh' ? 'English' : '简体中文'}
         </button>
         <ConnectButton />
       </div>
