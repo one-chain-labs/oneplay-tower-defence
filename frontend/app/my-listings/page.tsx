@@ -5,7 +5,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } fr
 import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
-import { useI18n } from '../providers';
+import { networks, useI18n } from '../providers';
 
 interface TowerNFT {
   id: string;
@@ -28,7 +28,8 @@ interface MyListing {
 const RARITY_NAMES = ['', 'Common', 'Rare', 'Epic', 'Legendary'];
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
 const RARITY_BG = ['', 'bg-gray-500', 'bg-blue-500', 'bg-purple-500', 'bg-yellow-500'];
-
+const NETWORK_RPC = (process.env.NEXT_PUBLIC_NETWORK || 'testnet') as keyof typeof networks;
+const NETWORK_RPC_URL = networks[NETWORK_RPC].url;
 export default function MyListingsPage() {
   const { t } = useI18n();
   const account = useCurrentAccount();
@@ -175,7 +176,7 @@ export default function MyListingsPage() {
       try {
         const listingPromises = activeIds.map(async (id) => {
           try {
-            const response = await fetch('https://rpc-testnet.onelabs.cc', {
+            const response = await fetch(NETWORK_RPC_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -183,7 +184,7 @@ export default function MyListingsPage() {
                 id: 1,
                 method: 'sui_getObject',
                 params: [
-                  id,
+                  id, 
                   {
                     showContent: true,
                   },

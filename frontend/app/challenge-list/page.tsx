@@ -5,7 +5,7 @@ import { useCurrentAccount, useSuiClientQuery } from '@onelabs/dapp-kit';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useI18n } from '../providers';
+import { networks, useI18n } from '../providers';
 
 interface Challenge {
   id: string;
@@ -22,7 +22,8 @@ interface Challenge {
 
 
 const TYPE_EMOJI = ['', '👹', '⚡', '🛡️'];
-
+const NETWORK_RPC = (process.env.NEXT_PUBLIC_NETWORK || 'testnet') as keyof typeof networks;
+const NETWORK_RPC_URL = networks[NETWORK_RPC].url;
 export default function ChallengeListPage() {
   const account = useCurrentAccount();
   const router = useRouter();
@@ -72,11 +73,11 @@ export default function ChallengeListPage() {
       try {
         const challengePromises = Array.from(activeChallengeIds).map(async (id) => {
           try {
-            const response = await fetch('https://rpc-testnet.onelabs.cc', {
+            const response = await fetch(NETWORK_RPC_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                jsonrpc: '2.0',
+                jsonrpc: '2.0', 
                 id: 1,
                 method: 'sui_getObject',
                 params: [

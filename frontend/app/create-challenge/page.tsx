@@ -5,7 +5,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClientQuery } fr
 import { Transaction } from '@onelabs/sui/transactions';
 import { PACKAGE_ID } from '@/lib/constants';
 import Link from 'next/link';
-import { useI18n } from '../providers';
+import { networks, useI18n } from '../providers';
 
 interface MonsterNFT {
   id: string;
@@ -17,7 +17,8 @@ interface MonsterNFT {
 
 const RARITY_COLORS = ['', 'text-gray-400', 'text-blue-400', 'text-purple-400', 'text-yellow-400'];
 const TYPE_EMOJI = ['', '👹', '⚡', '🛡️'];
-
+const NETWORK_RPC = (process.env.NEXT_PUBLIC_NETWORK || 'testnet') as keyof typeof networks;
+const NETWORK_RPC_URL = networks[NETWORK_RPC].url;
 export default function CreateChallengePage() {
   const account = useCurrentAccount();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
@@ -102,11 +103,11 @@ export default function CreateChallengePage() {
     const tx = new Transaction();
     
     // Get GAME token
-    const gameCoinsResponse = await fetch('https://rpc-testnet.onelabs.cc', {
+    const gameCoinsResponse = await fetch(NETWORK_RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        jsonrpc: '2.0',
+        jsonrpc: '2.0', 
         id: 1,
         method: 'suix_getCoins',
         params: [account.address, `${PACKAGE_ID}::game::GAME`],
